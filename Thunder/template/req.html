@@ -68,10 +68,23 @@ video#vid{width:100%;max-height:540px;display:block;background:#000}
 .cb:active{transform:scale(.9)}
 .td{font-size:.76rem;color:rgba(255,255,255,.8);white-space:nowrap;margin:0 5px}
 .spacer{flex:1}
-.vw{display:flex;align-items:center;gap:5px}
-.vs{-webkit-appearance:none;appearance:none;width:68px;height:3px;border-radius:3px;outline:none;
+.vw{position:relative;display:flex;align-items:center}
+.vs-pop{position:absolute;bottom:calc(100% + 14px);left:50%;transform:translateX(-50%) translateY(8px);
+  background:rgba(8,8,20,.94);border:1px solid var(--glass-border);border-radius:12px;
+  padding:12px 8px 8px;display:none;flex-direction:column;align-items:center;gap:8px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:60;
+  opacity:0;transition:opacity .2s,transform .2s}
+.vw.open .vs-pop{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+@media (hover:hover){ .vw:hover .vs-pop{display:flex;opacity:1;transform:translateX(-50%) translateY(0)} }
+.vs-wrap{width:36px;height:110px;position:relative}
+.vs{position:absolute;top:50%;left:50%;width:110px;transform:translate(-50%,-50%) rotate(-90deg);
+  -webkit-appearance:none;appearance:none;height:4px;border-radius:4px;outline:none;
   background:rgba(255,255,255,.25);cursor:pointer}
-.vs::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--glow)}
+.vs::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--glow);cursor:pointer}
+.vs::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:#fff;border:none;cursor:pointer}
+.vs-mu{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:6px;border-radius:8px}
+.vs-mu:hover{color:#fff;background:rgba(255,255,255,.08)}
 /* ---------- settings panel ---------- */
 #sp{position:absolute;bottom:60px;right:10px;z-index:50;width:250px;max-width:calc(100vw - 22px);
   background:rgba(8,8,20,.85);backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:14px;
@@ -132,7 +145,6 @@ footer a:hover{color:var(--ac3)}
 }
 @media (max-width:480px){
   .cb{padding:12px 9px}
-  .vs{display:none}
   .td{font-size:.78rem}
   .br{gap:0}
 }
@@ -176,9 +188,12 @@ footer a:hover{color:var(--ac3)}
         <button class="cb" id="bFw" title="Forward 10s"><i class="fa fa-rotate-right"></i></button>
         <span class="td" id="td">0:00 / 0:00</span>
         <div class="spacer"></div>
-        <div class="vw">
-          <button class="cb" id="bMu" title="Mute"><i class="fa fa-volume-high" id="vIco"></i></button>
-          <input type="range" class="vs" id="vs" min="0" max="1" step="0.02" value="1">
+        <div class="vw" id="vw">
+          <button class="cb" id="bMu" title="Volume"><i class="fa fa-volume-high" id="vIco"></i></button>
+          <div class="vs-pop" id="vsPop">
+            <div class="vs-wrap"><input type="range" class="vs" id="vs" min="0" max="1" step="0.02" value="1"></div>
+            <button class="vs-mu" id="bMu2" title="Mute/Unmute"><i class="fa fa-volume-xmark" id="vIco2"></i></button>
+          </div>
         </div>
         <button class="cb" id="bSet" title="Settings"><i class="fa fa-gear"></i></button>
         <button class="cb" id="bFs" title="Fullscreen"><i class="fa fa-expand" id="fsIco"></i></button>
@@ -222,6 +237,7 @@ const vid = document.getElementById('vid'),
       vIco = document.getElementById('vIco'),
       fsIco = document.getElementById('fsIco'),
       vs = document.getElementById('vs'),
+      vw = document.getElementById('vw'),
       spPanel = document.getElementById('sp'),
       spSpd = document.getElementById('spSpd'),
       sfL = document.getElementById('sfL'),
@@ -253,6 +269,7 @@ vid.addEventListener('playing',()=>{spn.style.display='none';});
 vid.addEventListener('canplay',()=>{spn.style.display='none';});
 pw.addEventListener('click', e=>{
   if(e.target.closest('.cbw,#sp')) return;
+  vw.classList.remove('open');
   if(IS_TOUCH){ showCtrl(); } else { togglePlay(); }
   spPanel.classList.remove('open');
 });
@@ -299,11 +316,23 @@ prog.addEventListener('pointerdown', e=>{scrubbing=true;prog.setPointerCapture(e
 prog.addEventListener('pointermove', e=>{if(scrubbing) scrubTo(e.clientX);});
 prog.addEventListener('pointerup', ()=>{scrubbing=false;});
 /* volume */
+const vIco2 = document.getElementById('vIco2');
 function syncVolIcon(){
-  vIco.className = 'fa ' + (vid.muted||vid.volume===0 ? 'fa-volume-xmark' : vid.volume<0.5 ? 'fa-volume-low' : 'fa-volume-high');
+  const off = vid.muted||vid.volume===0;
+  vIco.className = 'fa ' + (off ? 'fa-volume-xmark' : vid.volume<0.5 ? 'fa-volume-low' : 'fa-volume-high');
+  vIco2.className = 'fa ' + (off ? 'fa-volume-xmark' : 'fa-volume-high');
 }
-vs.addEventListener('input', ()=>{vid.volume=parseFloat(vs.value);vid.muted=false;syncVolIcon();});
-document.getElementById('bMu').onclick = e=>{e.stopPropagation();vid.muted=!vid.muted;syncVolIcon();};
+function toggleMute(){
+  vid.muted=!vid.muted;
+  if(!vid.muted&&vid.volume===0){vid.volume=0.5;vs.value=0.5;}
+  syncVolIcon();
+}
+vs.addEventListener('input', ()=>{vid.volume=parseFloat(vs.value);vid.muted=(vid.volume===0);syncVolIcon();});
+document.getElementById('bMu').onclick = e=>{
+  e.stopPropagation();
+  if(IS_TOUCH){ vw.classList.toggle('open'); } else { toggleMute(); }
+};
+document.getElementById('bMu2').onclick = e=>{e.stopPropagation();toggleMute();};
 /* auto-hide controls */
 let hideT=null;
 function showCtrl(){
@@ -314,15 +343,37 @@ function showCtrl(){
 ['mousemove','touchstart'].forEach(ev=>pw.addEventListener(ev,showCtrl,{passive:true}));
 showCtrl();
 /* fullscreen */
+function syncFsIcon(){
+  const fs=!!(document.fullscreenElement||document.webkitFullscreenElement||vid.webkitDisplayingFullscreen);
+  fsIco.className='fa '+(fs?'fa-compress':'fa-expand');
+}
 function toggleFs(){
-  if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
-  else if(pw.requestFullscreen){ pw.requestFullscreen().catch(()=>{}); }
-  else if(pw.webkitRequestFullscreen){ pw.webkitRequestFullscreen(); }
+  const doc=document;
+  if(doc.fullscreenElement||doc.webkitFullscreenElement){
+    if(doc.exitFullscreen) doc.exitFullscreen().catch(()=>{});
+    else if(doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+    return;
+  }
+  const tryVideoFs=()=>{
+    if(typeof vid.webkitEnterFullscreen==='function'){
+      try{vid.webkitEnterFullscreen();return true;}catch(e){return false;}
+    }
+    return false;
+  };
+  const req=pw.requestFullscreen||pw.webkitRequestFullscreen||pw.msRequestFullscreen;
+  if(req){
+    let p=null;
+    try{ p=req.call(pw); }catch(e){ p=null; }
+    if(p&&typeof p.catch==='function') p.catch(()=>{ if(!tryVideoFs()) toast('Fullscreen not supported here'); });
+    else if(!p) tryVideoFs();
+  }
+  else if(!tryVideoFs()){ toast('Fullscreen not supported on this browser'); }
 }
 document.getElementById('bFs').onclick = e=>{e.stopPropagation();toggleFs();};
-document.addEventListener('fullscreenchange', ()=>{
-  fsIco.className = 'fa ' + (document.fullscreenElement ? 'fa-compress' : 'fa-expand');
-});
+document.addEventListener('fullscreenchange',syncFsIcon);
+document.addEventListener('webkitfullscreenchange',syncFsIcon);
+vid.addEventListener('webkitbeginfullscreen',syncFsIcon);
+vid.addEventListener('webkitendfullscreen',syncFsIcon);
 /* settings */
 document.getElementById('bSet').onclick = e=>{e.stopPropagation();spPanel.classList.toggle('open');};
 spSpd.addEventListener('change', ()=>{vid.playbackRate=parseFloat(spSpd.value);});
