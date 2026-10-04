@@ -1,4 +1,4 @@
-# Thunder/utils/render_template.py
+# Thunder/utils/render_template.py  (patched: adds file_size + download_url for the stream page)
 
 import asyncio
 import urllib.parse
@@ -8,7 +8,8 @@ from pyrogram.errors import FloodWait
 
 from Thunder.bot import StreamBot
 from Thunder.server.exceptions import InvalidHash
-from Thunder.utils.file_properties import get_fname, get_uniqid
+from Thunder.utils.file_properties import get_fname, get_fsize, get_uniqid
+from Thunder.utils.human_readable import humanbytes
 from Thunder.utils.logger import logger
 from Thunder.vars import Var
 
@@ -21,14 +22,16 @@ template_env = Environment(
     optimized=True
 )
 
-async def render_media_page(file_name: str, src: str, requested_action: str | None = None) -> str:
+async def render_media_page(file_name: str, src: str, requested_action: str | None = None, file_size: str | None = None) -> str:
     # NOTE: src must be a pre-encoded URL. Templates use |safe to avoid double-encoding.
     if requested_action == 'stream':
         template = template_env.get_template('req.html')
         context = {
             'heading': f"View {file_name}",
             'file_name': file_name,
-            'src': f"{src}?disposition=inline"
+            'src': f"{src}?disposition=inline",
+            'download_url': src,
+            'file_size': file_size or "",
         }
     else:
         template = template_env.get_template('dl.html')
@@ -58,7 +61,8 @@ async def render_page(message_id: int, secure_hash: str, requested_action: str |
 
         quoted_filename = urllib.parse.quote(file_name.replace('/', '_'), safe="")
         src = urllib.parse.urljoin(Var.URL, f'{secure_hash}{message_id}/{quoted_filename}')
-        return await render_media_page(file_name, src, requested_action)
+        size_str = humanbytes(get_fsize(message))
+        return await render_media_page(file_name, src, requested_action, file_size=size_str)
     except Exception as e:
         logger.error(
             f"Error in render_page for message_id {message_id} and hash {secure_hash}: {e}",
