@@ -120,6 +120,22 @@ footer{text-align:center;padding:30px 16px;border-top:1px solid var(--glass-bord
   margin-top:52px;font-size:.76rem;color:var(--muted)}
 footer a{color:var(--ac1);text-decoration:none}
 footer a:hover{color:var(--ac3)}
+/* ---------- mobile: bigger touch targets ---------- */
+@media (max-width:640px){
+  .cb{padding:13px 12px;font-size:1.25rem}
+  .cbw{padding:46px 10px 14px}
+  .prog{height:5px;margin-bottom:4px}
+  .prog-thumb{transform:translateY(-50%) scale(1);width:16px;height:16px}
+  .td{font-size:.85rem;margin:0 6px}
+  #sp{bottom:76px;right:8px}
+  .skip-flash{font-size:.9rem;padding:10px 18px}
+}
+@media (max-width:480px){
+  .cb{padding:12px 9px}
+  .vs{display:none}
+  .td{font-size:.78rem}
+  .br{gap:0}
+}
 </style>
 </head>
 <body>
@@ -193,6 +209,7 @@ footer a:hover{color:var(--ac3)}
 const STREAM_URL = {{ src|tojson }};
 const FILE_URL   = {{ download_url|tojson }};
 const FILE_NAME  = {{ file_name|tojson }};
+const IS_TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
 const vid = document.getElementById('vid'),
       pw = document.getElementById('pw'),
@@ -234,7 +251,11 @@ vid.addEventListener('ended',()=>{pIco.className='fa fa-play';});
 vid.addEventListener('waiting',()=>{spn.style.display='block';});
 vid.addEventListener('playing',()=>{spn.style.display='none';});
 vid.addEventListener('canplay',()=>{spn.style.display='none';});
-pw.addEventListener('click', e=>{ if(e.target.closest('.cbw,#sp')) return; togglePlay(); });
+pw.addEventListener('click', e=>{
+  if(e.target.closest('.cbw,#sp')) return;
+  if(IS_TOUCH){ showCtrl(); } else { togglePlay(); }
+  spPanel.classList.remove('open');
+});
 /* skip */
 function flash(el){ el.classList.add('show'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),600); }
 function skip(s){
@@ -304,7 +325,6 @@ document.addEventListener('fullscreenchange', ()=>{
 });
 /* settings */
 document.getElementById('bSet').onclick = e=>{e.stopPropagation();spPanel.classList.toggle('open');};
-pw.addEventListener('click', e=>{ if(!e.target.closest('#sp')) spPanel.classList.remove('open'); });
 spSpd.addEventListener('change', ()=>{vid.playbackRate=parseFloat(spSpd.value);});
 /* keyboard */
 document.addEventListener('keydown', e=>{
