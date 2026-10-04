@@ -295,6 +295,7 @@ vid.addEventListener('playing',()=>{spn.style.display='none';});
 vid.addEventListener('canplay',()=>{spn.style.display='none';});
 pw.addEventListener('click', e=>{
   if(e.target.closest('.cbw,#sp')) return;
+  if(Date.now()-justScrubbedAt<600) return;
   vw.classList.remove('open');
   if(IS_TOUCH){ showCtrl(); } else { togglePlay(); }
   spPanel.classList.remove('open');
@@ -321,6 +322,7 @@ pw.addEventListener('touchend', e=>{
 });
 /* progress + time */
 vid.addEventListener('timeupdate', ()=>{
+  if(scrubbing) return;
   const d=vid.duration||0, c=vid.currentTime||0;
   pf.style.width = d? (c/d*100)+'%' : '0%';
   td.textContent = fmt(c)+' / '+fmt(d);
@@ -332,21 +334,39 @@ vid.addEventListener('progress', ()=>{
     }
   }catch(e){}
 });
-let scrubbing=false;
-function scrubTo(clientX){
+let scrubbing=false, scrubRatio=0, scrubMoved=false, scrubDownX=0, justScrubbedAt=0;
+function ratioFromClientX(clientX){
   const r=prog.getBoundingClientRect();
-  const ratio=Math.min(Math.max(0,(clientX-r.left)/r.width),1);
-  if(isFinite(vid.duration)) vid.currentTime = ratio*vid.duration;
+  return Math.min(Math.max(0,(clientX-r.left)/r.width),1);
+}
+function paintScrub(){
+  const d=vid.duration||0;
+  if(!(d>0)) return;
+  pf.style.width=(scrubRatio*100)+'%';
+  td.textContent=fmt(scrubRatio*d)+' / '+fmt(d);
 }
 prog.addEventListener('pointerdown', e=>{
-  scrubbing=true;
+  scrubbing=true; scrubMoved=false; scrubDownX=e.clientX;
+  scrubRatio=ratioFromClientX(e.clientX);
+  paintScrub();
   try{prog.setPointerCapture(e.pointerId);}catch(err){}
-  scrubTo(e.clientX);
   e.preventDefault();
 });
-window.addEventListener('pointermove', e=>{if(scrubbing) scrubTo(e.clientX);},{passive:true});
-window.addEventListener('pointerup', ()=>{scrubbing=false;});
-window.addEventListener('pointercancel', ()=>{scrubbing=false;});
+window.addEventListener('pointermove', e=>{
+  if(!scrubbing) return;
+  if(Math.abs(e.clientX-scrubDownX)>8) scrubMoved=true;
+  scrubRatio=ratioFromClientX(e.clientX);
+  paintScrub();
+},{passive:true});
+function endScrub(commit){
+  if(!scrubbing) return;
+  scrubbing=false;
+  const d=vid.duration||0;
+  if(commit&&d>0) vid.currentTime=scrubRatio*d;
+  if(scrubMoved) justScrubbedAt=Date.now();
+}
+window.addEventListener('pointerup', ()=>endScrub(true));
+window.addEventListener('pointercancel', ()=>endScrub(false));
 /* volume */
 const vIco2 = document.getElementById('vIco2');
 function syncVolIcon(){
