@@ -18,6 +18,7 @@ from Thunder.utils.canonical_files import (
 )
 from Thunder.utils.custom_dl import ByteStreamer
 from Thunder.utils.file_properties import get_media
+from Thunder.utils.human_readable import humanbytes
 from Thunder.utils.logger import logger
 from Thunder.utils.render_template import render_media_page, render_page
 from Thunder.utils.time_format import get_readable_time
@@ -321,7 +322,9 @@ async def canonical_media_preview(request: web.Request):
 
         file_name = file_record.get("file_name") or f"file_{secure_hash}"
         src = f"{Var.URL.rstrip('/')}/f/{secure_hash}/{quote_media_name(file_name)}"
-        rendered_page = await render_media_page(file_name, src, requested_action='stream')
+        raw_size = file_record.get("file_size")
+        size_str = humanbytes(int(raw_size or 0)) if raw_size else ""
+        rendered_page = await render_media_page(file_name, src, requested_action='stream', file_size=size_str)
 
         response = web.Response(
             text=rendered_page,
