@@ -51,7 +51,6 @@ body[data-wt="light"] #stars{opacity:0}
   background:rgba(4,6,14,.55);border-bottom:1px solid var(--glass-border)}
 .top-in{max-width:860px;margin:0 auto;padding:13px 18px;display:flex;align-items:center;gap:12px}
 .brand-ico{font-size:1.35rem;color:#f7efd6;display:inline-flex;filter:drop-shadow(0 0 8px rgba(253,246,214,.7))}
-body[data-wt="light"] .brand-ico{color:#dd9426;filter:drop-shadow(0 0 8px rgba(255,180,60,.55))}
 .brand-name{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;letter-spacing:1px;line-height:1;
   background:linear-gradient(120deg,#fdf6d6,#c9d9ff 60%,#8fb4ff);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -97,25 +96,41 @@ body[data-wt="light"] .brand-ico{color:#dd9426;filter:drop-shadow(0 0 8px rgba(2
   display:flex;align-items:center;justify-content:center;font-size:.68rem;
   transition:left var(--trans);box-shadow:0 2px 8px rgba(0,0,0,.35)}
 body[data-wt="light"] .ts-knob{left:32px;background:linear-gradient(135deg,#fff3c4,#ffb63f);color:#7a4d00}
-/* ================= light (sunshine) theme ================= */
+/* ================= light (sunshine) theme: blue sky ================= */
 body[data-wt="light"]{
-  --sky:linear-gradient(180deg,#fff9ec 0%,#fbeed3 50%,#f5ddac 100%);
-  --text:#1c2547; --muted:#5d6a8c;
-  --glass:rgba(255,255,255,.62); --glass-border:rgba(150,120,60,.30);
-  --glow:rgba(255,190,90,.35);
+  --sky:linear-gradient(180deg,#8ecdf5 0%,#bfe3fd 42%,#e4f3ff 75%,#f2f9ff 100%);
+  --text:#16294d; --muted:#4d6488;
+  --glass:rgba(255,255,255,.60); --glass-border:rgba(90,140,200,.35);
+  --glow:rgba(120,180,255,.40);
 }
-body[data-wt="light"] .top{background:rgba(255,250,238,.62)}
-body[data-wt="light"] .brand-name{background-image:linear-gradient(120deg,#8a5f00,#d99a26 55%,#5f430a)}
-body[data-wt="light"] .modal-title{background-image:linear-gradient(120deg,#8a5f00,#d99a26)}
-body[data-wt="light"] .modal{background:rgba(60,45,20,.45)}
-body[data-wt="light"] .modal-sheet{background:rgba(255,251,240,.96)}
+body[data-wt="light"] .top{background:rgba(238,247,255,.62)}
+body[data-wt="light"] .brand-name{background-image:linear-gradient(120deg,#0f5cab,#2f8fdd 55%,#0a3f7e)}
+body[data-wt="light"] .modal-title{background-image:linear-gradient(120deg,#0f5cab,#2f8fdd)}
+body[data-wt="light"] .modal{background:rgba(30,50,80,.45)}
+body[data-wt="light"] .modal-sheet{background:rgba(244,250,255,.96)}
 body[data-wt="light"] .warn{color:#7a5410;background:rgba(200,140,40,.10)}
-body[data-wt="light"] .file-card{box-shadow:0 10px 30px rgba(150,110,40,.18)}
-body[data-wt="light"] .fc-ico{box-shadow:0 0 18px rgba(200,150,50,.45)}
+body[data-wt="light"] .file-card{box-shadow:0 10px 30px rgba(70,120,180,.20)}
+body[data-wt="light"] .fc-ico{box-shadow:0 0 18px rgba(255,180,60,.50)}
 body[data-wt="light"] .eb{background:rgba(47,95,192,.06)}
 body[data-wt="light"] .eb:hover{background:rgba(47,95,192,.12);border-color:rgba(47,95,192,.4)}
-body[data-wt="light"] .btn-primary{box-shadow:0 8px 26px rgba(200,150,50,.42),inset 0 1px 0 rgba(255,255,255,.5)}
-body[data-wt="light"] footer{color:#7a6a4a}
+body[data-wt="light"] .btn-primary{box-shadow:0 8px 26px rgba(255,170,60,.45),inset 0 1px 0 rgba(255,255,255,.5)}
+body[data-wt="light"] footer{color:#5a6f8c}
+body[data-wt="light"] .brand-ico{color:#f0a020;filter:drop-shadow(0 0 8px rgba(255,180,60,.55))}
+/* clouds (light mode only) */
+.cloud{display:none;position:fixed;z-index:0;pointer-events:none;background:#fff;border-radius:999px;opacity:.9;
+  filter:drop-shadow(0 10px 18px rgba(110,150,210,.28))}
+.cloud::before,.cloud::after{content:'';position:absolute;background:#fff;border-radius:50%}
+.cloud.c1{width:132px;height:38px;top:11%;animation:drift 70s linear infinite}
+.cloud.c1::before{width:58px;height:58px;top:-27px;left:24px}
+.cloud.c1::after{width:38px;height:38px;top:-17px;left:68px}
+.cloud.c2{width:96px;height:30px;top:24%;animation:drift 95s linear infinite;animation-delay:-30s;opacity:.75}
+.cloud.c2::before{width:44px;height:44px;top:-21px;left:16px}
+.cloud.c2::after{width:30px;height:30px;top:-13px;left:50px}
+.cloud.c3{width:160px;height:44px;top:5%;animation:drift 125s linear infinite;animation-delay:-70s;opacity:.65}
+.cloud.c3::before{width:70px;height:70px;top:-32px;left:30px}
+.cloud.c3::after{width:46px;height:46px;top:-21px;left:84px}
+body[data-wt="light"] .cloud{display:block}
+@keyframes drift{from{transform:translateX(-25vw)}to{transform:translateX(125vw)}}
 /* ================= external players modal ================= */
 .modal{position:fixed;inset:0;z-index:500;display:flex;align-items:flex-end;justify-content:center;
   background:rgba(2,4,10,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
@@ -257,6 +272,9 @@ video#vid{width:100%;aspect-ratio:16/9;max-height:540px;display:block;background
 <div class="sky"></div>
 <canvas id="stars"></canvas>
 <div class="orb moon" id="orb"></div>
+<div class="cloud c1"></div>
+<div class="cloud c2"></div>
+<div class="cloud c3"></div>
 <header class="top"><div class="top-in">
   <span class="brand-ico"><i class="fa fa-moon" id="brandIco"></i></span>
   <div><div class="brand-name">Wolf</div><div class="brand-sub" id="brandSub">moonlight streaming</div></div>
