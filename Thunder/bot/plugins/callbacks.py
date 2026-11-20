@@ -228,7 +228,14 @@ def _is_link_owner(callback_query: CallbackQuery, record) -> bool:
         return False
     if user.id == Var.OWNER_ID:
         return True
-    return user.id == record.get("first_source_chat_id")
+    if user.id == record.get("first_source_chat_id"):
+        return True
+    # Buttons on a message in a private chat with the bot can only be seen
+    # (and pressed) by that chat's user, so the tapper is the link recipient.
+    # This covers forwarded files from groups/channels, where the record
+    # stores the group/channel id instead of the requesting user.
+    message = callback_query.message
+    return bool(message and message.chat and message.chat.id == user.id)
 
 
 async def _safe_answer(callback_query: CallbackQuery, text: str, *, show_alert: bool = False) -> None:
