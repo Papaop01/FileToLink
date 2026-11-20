@@ -60,7 +60,7 @@ async def render_page(message_id: int, secure_hash: str, requested_action: str |
         if not file_unique_id or file_unique_id[:6] != secure_hash:
             raise InvalidHash("File unique ID or secure hash mismatch during rendering.")
 
-        file_record = await get_file_by_unique_id(file_unique_id)
+        file_record = await get_file_by_unique_id(file_unique_id, force_refresh=True)
         if file_record and not is_link_active(file_record):
             raise FileNotFound("File link revoked")
 

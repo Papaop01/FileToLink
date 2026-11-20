@@ -163,10 +163,13 @@ def _forget(record: Dict[str, Any]) -> None:
         _cache_by_message_id.pop(canonical_message_id, None)
 
 
-async def get_file_by_unique_id(file_unique_id: str) -> Optional[Dict[str, Any]]:
-    cached = _cache_get(_cache_by_unique_id, file_unique_id)
-    if cached:
-        return cached
+async def get_file_by_unique_id(
+    file_unique_id: str, *, force_refresh: bool = False
+) -> Optional[Dict[str, Any]]:
+    if not force_refresh:
+        cached = _cache_get(_cache_by_unique_id, file_unique_id)
+        if cached:
+            return cached
     record = await db.get_file_by_unique_id(file_unique_id)
     return _remember(record) if record else None
 
@@ -174,19 +177,24 @@ async def get_file_by_unique_id(file_unique_id: str) -> Optional[Dict[str, Any]]
 async def get_file_by_hash(
     public_hash: str,
     *,
-    raise_on_error: bool = True
+    raise_on_error: bool = True,
+    force_refresh: bool = False
 ) -> Optional[Dict[str, Any]]:
-    cached = _cache_get(_cache_by_hash, public_hash)
-    if cached:
-        return cached
+    if not force_refresh:
+        cached = _cache_get(_cache_by_hash, public_hash)
+        if cached:
+            return cached
     record = await db.get_file_by_hash(public_hash, raise_on_error=raise_on_error)
     return _remember(record) if record else None
 
 
-async def get_file_by_message_id(canonical_message_id: int) -> Optional[Dict[str, Any]]:
-    cached = _cache_get(_cache_by_message_id, canonical_message_id)
-    if cached:
-        return cached
+async def get_file_by_message_id(
+    canonical_message_id: int, *, force_refresh: bool = False
+) -> Optional[Dict[str, Any]]:
+    if not force_refresh:
+        cached = _cache_get(_cache_by_message_id, canonical_message_id)
+        if cached:
+            return cached
     record = await db.get_file_by_message_id(canonical_message_id)
     return _remember(record) if record else None
 

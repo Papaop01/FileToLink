@@ -208,7 +208,9 @@ async def _serve_media_response(
         "Content-Disposition": (
             f"{disposition}; filename*=UTF-8''{quote(filename, safe='')}"),
         "Accept-Ranges": "bytes",
-        "Cache-Control": "public, max-age=31536000",
+        # Never let the browser cache media: a revoked link must stop
+        # working on re-click instead of replaying from the local cache.
+        "Cache-Control": "no-store",
         "Connection": "keep-alive",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Range, Content-Type, *",
@@ -318,7 +320,8 @@ async def media_options(request: web.Request):
 async def canonical_media_preview(request: web.Request):
     try:
         secure_hash = validate_public_hash(request.match_info["secure_hash"])
-        file_record = await get_file_by_hash(secure_hash, raise_on_error=False)
+        file_record = await get_file_by_hash(
+            secure_hash, raise_on_error=False, force_refresh=True)
         if not file_record:
             raise FileNotFound("Canonical file not found")
         if not is_link_active(file_record):
@@ -337,6 +340,7 @@ async def canonical_media_preview(request: web.Request):
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "Range, Content-Type, *",
                 "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "no-store",
             }
         )
         response.enable_compression()
@@ -367,6 +371,7 @@ async def media_preview(request: web.Request):
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "Range, Content-Type, *",
                 "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "no-store",
             }
         )
         response.enable_compression()
@@ -388,7 +393,8 @@ async def media_preview(request: web.Request):
 async def canonical_media_delivery(request: web.Request):
     try:
         secure_hash = validate_public_hash(request.match_info["secure_hash"])
-        file_record = await get_file_by_hash(secure_hash, raise_on_error=False)
+        file_record = await get_file_by_hash(
+            secure_hash, raise_on_error=False, force_refresh=True)
         if not file_record:
             raise FileNotFound("Canonical file not found")
         if not is_link_active(file_record):
@@ -468,7 +474,7 @@ async def media_delivery(request: web.Request):
             if unique_id[:SECURE_HASH_LENGTH] != secure_hash:
                 raise InvalidHash(
                     "Provided hash does not match file's unique ID.")
-            file_record = await get_file_by_unique_id(unique_id)
+            file_record = await get_file_by_unique_id(unique_id, force_refresh=True)
             if file_record and not is_link_active(file_record):
                 raise FileNotFound("File link revoked")
             return await _serve_media_response(
