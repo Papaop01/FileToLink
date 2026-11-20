@@ -384,6 +384,55 @@ class Database:
                 raise
             return False
 
+    async def set_file_link_status(
+        self,
+        public_hash: str,
+        link_status: str,
+        *,
+        raise_on_error: bool = False
+    ) -> bool:
+        try:
+            await self.files_col.update_one(
+                {"public_hash": public_hash},
+                {
+                    "$set": {
+                        "link_status": link_status,
+                        "last_seen_at": datetime.datetime.now(datetime.timezone.utc)
+                    }
+                }
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Error setting link status for {public_hash}: {e}", exc_info=True)
+            if raise_on_error:
+                raise
+            return False
+
+    async def rotate_file_public_hash(
+        self,
+        old_public_hash: str,
+        new_public_hash: str,
+        *,
+        raise_on_error: bool = False
+    ) -> bool:
+        try:
+            await self.files_col.update_one(
+                {"public_hash": old_public_hash},
+                {
+                    "$set": {
+                        "public_hash": new_public_hash,
+                        "link_status": "active",
+                        "last_seen_at": datetime.datetime.now(datetime.timezone.utc)
+                    }
+                }
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Error rotating public hash for {old_public_hash}: {e}", exc_info=True)
+            if raise_on_error:
+                raise
+            return False
+
     async def acquire_file_ingest_claim(
         self,
         file_unique_id: str,

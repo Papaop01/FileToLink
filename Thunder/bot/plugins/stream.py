@@ -12,14 +12,17 @@ from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
 from Thunder.bot import StreamBot
 from Thunder.utils.bot_utils import (gen_canonical_links, gen_links, is_admin,
                                      log_newusr, notify_own, reply_user_err)
-from Thunder.utils.canonical_files import get_or_create_canonical_file
+from Thunder.utils.canonical_files import (
+    ensure_active_canonical_link,
+    get_or_create_canonical_file,
+)
 from Thunder.utils.database import db
 from Thunder.utils.decorators import (check_banned, get_shortener_status,
                                       require_token)
 from Thunder.utils.force_channel import force_channel_check
 from Thunder.utils.logger import logger
 from Thunder.utils.messages import (
-    MSG_BATCH_LINKS_READY, MSG_BUTTON_DOWNLOAD, MSG_BUTTON_START_CHAT,
+    MSG_BATCH_LINKS_READY, MSG_BUTTON_DOWNLOAD, MSG_BUTTON_REVOKE_LINK, MSG_BUTTON_START_CHAT,
     MSG_BUTTON_STREAM_NOW, MSG_CRITICAL_ERROR, MSG_DM_BATCH_PREFIX,
     MSG_DM_SINGLE_PREFIX, MSG_ERROR_DM_FAILED, MSG_ERROR_INVALID_NUMBER,
     MSG_ERROR_NO_FILE, MSG_ERROR_NOT_ADMIN, MSG_ERROR_NUMBER_RANGE,
@@ -56,11 +59,15 @@ async def fwd_media(m_msg: Message) -> Optional[Message]:
         return None
 
 
-def get_link_buttons(links):
-    return InlineKeyboardMarkup([[
+def get_link_buttons(links, file_unique_id=None):
+    buttons = [[
         InlineKeyboardButton(MSG_BUTTON_STREAM_NOW, url=links['stream_link']),
         InlineKeyboardButton(MSG_BUTTON_DOWNLOAD, url=links['online_link'])
-    ]])
+    ]]
+    if file_unique_id:
+        buttons.append([InlineKeyboardButton(
+            MSG_BUTTON_REVOKE_LINK, callback_data=f"revoke_{file_unique_id}")])
+    return InlineKeyboardMarkup(buttons)
 
 async def validate_request_common(client: Client, message: Message) -> Optional[bool]:
     if not await check_banned(client, message):
@@ -151,7 +158,8 @@ async def safe_delete_message(message: Message):
         logger.error(f"Error deleting message {message.id}: {e}", exc_info=True)
 
 
-async def send_dm_links(bot: Client, user_id: int, links: Dict[str, Any], chat_title: str):
+async def send_dm_links(bot: Client, user_id: int, links: Dict[str, Any], chat_title: str,
+                      file_unique_id: Optional[str] = None):
     try:
         dm_text = MSG_DM_SINGLE_PREFIX.format(chat_title=chat_title) + "\n" + \
                   MSG_LINKS.format(
@@ -166,7 +174,7 @@ async def send_dm_links(bot: Client, user_id: int, links: Dict[str, Any], chat_t
                 text=dm_text,
                 disable_web_page_preview=True,
                 parse_mode=enums.ParseMode.MARKDOWN,
-                reply_markup=get_link_buttons(links)
+                reply_markup=get_link_buttons(links, file_unique_id)
             )
         except FloodWait as e:
             await asyncio.sleep(e.value)
@@ -175,13 +183,13 @@ async def send_dm_links(bot: Client, user_id: int, links: Dict[str, Any], chat_t
                 text=dm_text,
                 disable_web_page_preview=True,
                 parse_mode=enums.ParseMode.MARKDOWN,
-                reply_markup=get_link_buttons(links)
+                reply_markup=get_link_buttons(links, file_unique_id)
             )
     except Exception as e:
         logger.error(f"Error sending DM to user {user_id}: {e}", exc_info=True)
 
 
-async def send_link(msg: Message, links: Dict[str, Any]):
+async def send_link(msg: Message, links: Dict[str, Any], file_unique_id: Optional[str] = None):
     try:
         await msg.reply_text(
             MSG_LINKS.format(
@@ -193,7 +201,7 @@ async def send_link(msg: Message, links: Dict[str, Any]):
             quote=True,
             parse_mode=enums.ParseMode.MARKDOWN,
             disable_web_page_preview=True,
-            reply_markup=get_link_buttons(links)
+            reply_markup=get_link_buttons(links, file_unique_id)
         )
     except FloodWait as e:
         await asyncio.sleep(e.value)
@@ -207,7 +215,7 @@ async def send_link(msg: Message, links: Dict[str, Any]):
             quote=True,
             parse_mode=enums.ParseMode.MARKDOWN,
             disable_web_page_preview=True,
-            reply_markup=get_link_buttons(links)
+            reply_markup=get_link_buttons(links, file_unique_id)
         )
 
 
@@ -346,6 +354,7 @@ async def channel_receive_handler(bot: Client, msg: Message):
                 await safe_delete_message(stored_msg)
                 stored_msg = None
             if canonical_record:
+                canonical_record = await ensure_active_canonical_link(canonical_record)
                 links = await gen_canonical_links(
                     file_name=canonical_record["file_name"],
                     file_size=int(canonical_record.get("file_size", 0) or 0),
@@ -362,6 +371,7 @@ async def channel_receive_handler(bot: Client, msg: Message):
                         return
                 links = await gen_links(stored_msg, shortener=shortener_val)
                 reply_to_message_id = stored_msg.id
+            file_unique_id = canonical_record.get("file_unique_id") if canonical_record else None
             source_info = message.chat.title or "Unknown Channel"
             # When we reused an existing canonical BIN copy, stored_msg is intentionally
             # None so send_channel_links falls back to StreamBot.send_message(...,
@@ -410,16 +420,16 @@ async def channel_receive_handler(bot: Client, msg: Message):
 
             try:
                 try:
-                    await message.edit_reply_markup(reply_markup=get_link_buttons(links))
+                    await message.edit_reply_markup(reply_markup=get_link_buttons(links, file_unique_id))
                 except FloodWait as e:
                     await asyncio.sleep(e.value)
-                    await message.edit_reply_markup(reply_markup=get_link_buttons(links))
+                    await message.edit_reply_markup(reply_markup=get_link_buttons(links, file_unique_id))
             except (MessageNotModified, MessageDeleteForbidden, MessageIdInvalid):
                 logger.debug(f"Failed to edit reply markup for message {message.id} due to not modified, permissions or invalid ID. Sending new link instead.")
-                await send_link(message, links)
+                await send_link(message, links, file_unique_id)
             except Exception as e:
                 logger.error(f"Error editing reply markup for message {message.id}: {e}", exc_info=True)
-                await send_link(message, links)
+                await send_link(message, links, file_unique_id)
         except Exception as e:
             logger.error(f"Error in _actual_channel_receive_handler for message {message.id}: {e}", exc_info=True)
 
@@ -452,6 +462,7 @@ async def process_single(
             await safe_delete_message(stored_msg)
             stored_msg = None
         if canonical_record:
+            canonical_record = await ensure_active_canonical_link(canonical_record)
             links = await gen_canonical_links(
                 file_name=canonical_record["file_name"],
                 file_size=int(canonical_record.get("file_size", 0) or 0),
@@ -467,6 +478,7 @@ async def process_single(
                     return None
             links = await gen_links(stored_msg, shortener=shortener_val)
             canonical_reply_id = stored_msg.id
+        file_unique_id = canonical_record.get("file_unique_id") if canonical_record else None
         if notification_msg:
             result = await safe_edit_message(
                 notification_msg,
@@ -478,14 +490,14 @@ async def process_single(
                 ),
                 parse_mode=enums.ParseMode.MARKDOWN,
                 disable_web_page_preview=True,
-                reply_markup=get_link_buttons(links)
+                reply_markup=get_link_buttons(links, file_unique_id)
             )
             if not result:
-                await send_link(msg, links)
+                await send_link(msg, links, file_unique_id)
         elif not original_request_msg:
-            await send_link(msg, links)
+            await send_link(msg, links, file_unique_id)
         if msg.chat.type != enums.ChatType.PRIVATE and msg.from_user and not original_request_msg:
-            await send_dm_links(bot, msg.from_user.id, links, msg.chat.title or "the chat")
+            await send_dm_links(bot, msg.from_user.id, links, msg.chat.title or "the chat", file_unique_id)
         source_msg = original_request_msg if original_request_msg else msg
         source_info = ""
         source_id = 0

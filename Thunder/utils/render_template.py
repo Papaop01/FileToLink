@@ -7,7 +7,8 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pyrogram.errors import FloodWait
 
 from Thunder.bot import StreamBot
-from Thunder.server.exceptions import InvalidHash
+from Thunder.server.exceptions import FileNotFound, InvalidHash
+from Thunder.utils.canonical_files import get_file_by_unique_id, is_link_active
 from Thunder.utils.file_properties import get_fname, get_fsize, get_uniqid
 from Thunder.utils.human_readable import humanbytes
 from Thunder.utils.logger import logger
@@ -59,10 +60,16 @@ async def render_page(message_id: int, secure_hash: str, requested_action: str |
         if not file_unique_id or file_unique_id[:6] != secure_hash:
             raise InvalidHash("File unique ID or secure hash mismatch during rendering.")
 
+        file_record = await get_file_by_unique_id(file_unique_id)
+        if file_record and not is_link_active(file_record):
+            raise FileNotFound("File link revoked")
+
         quoted_filename = urllib.parse.quote(file_name.replace('/', '_'), safe="")
         src = urllib.parse.urljoin(Var.URL, f'{secure_hash}{message_id}/{quoted_filename}')
         size_str = humanbytes(get_fsize(message))
         return await render_media_page(file_name, src, requested_action, file_size=size_str)
+    except FileNotFound:
+        raise
     except Exception as e:
         logger.error(
             f"Error in render_page for message_id {message_id} and hash {secure_hash}: {e}",

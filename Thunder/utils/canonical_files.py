@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import hashlib
+import secrets
 from collections import OrderedDict
 from contextlib import asynccontextmanager
 from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
@@ -16,6 +17,8 @@ from Thunder.utils.logger import logger
 from Thunder.vars import Var
 
 PUBLIC_HASH_LENGTH = 20
+LINK_STATUS_ACTIVE = "active"
+LINK_STATUS_REVOKED = "revoked"
 _CACHE_TTL_SECONDS = 600
 _CACHE_MAX_ITEMS = 4096
 _INGEST_CLAIM_TTL_SECONDS = 60
@@ -39,6 +42,16 @@ _FLUSH_DELAY_SECONDS = 10
 
 def build_public_hash(file_unique_id: str) -> str:
     return hashlib.sha256(file_unique_id.encode("utf-8")).hexdigest()[:PUBLIC_HASH_LENGTH]
+
+
+def build_random_public_hash() -> str:
+    return secrets.token_hex(PUBLIC_HASH_LENGTH // 2)
+
+
+def is_link_active(record: Optional[Dict[str, Any]]) -> bool:
+    if not record:
+        return False
+    return record.get("link_status", LINK_STATUS_ACTIVE) == LINK_STATUS_ACTIVE
 
 
 def _infer_mime_type(media: Any) -> str:
@@ -69,6 +82,7 @@ def build_file_record(
     return {
         "file_unique_id": file_unique_id,
         "public_hash": build_public_hash(file_unique_id),
+        "link_status": LINK_STATUS_ACTIVE,
         "canonical_message_id": stored_message.id,
         "file_id": getattr(media, "file_id", None),
         "file_name": get_fname(stored_message),
@@ -266,6 +280,37 @@ async def update_cached_file_id(record: Dict[str, Any], file_id: str) -> None:
     await db.update_file_id(record["public_hash"], file_id, raise_on_error=True)
 
 
+async def revoke_canonical_file(record: Dict[str, Any]) -> Dict[str, Any]:
+    public_hash = record.get("public_hash")
+    if not public_hash:
+        return record
+    await db.set_file_link_status(public_hash, LINK_STATUS_REVOKED, raise_on_error=True)
+    record["link_status"] = LINK_STATUS_REVOKED
+    _remember(record)
+    return record
+
+
+async def regenerate_canonical_link(record: Dict[str, Any]) -> Dict[str, Any]:
+    old_hash = record.get("public_hash")
+    file_unique_id = record.get("file_unique_id")
+    if not old_hash or not file_unique_id:
+        return record
+    new_hash = build_random_public_hash()
+    async with file_ingest_lock(file_unique_id):
+        _forget(record)
+        await db.rotate_file_public_hash(old_hash, new_hash, raise_on_error=True)
+        record["public_hash"] = new_hash
+        record["link_status"] = LINK_STATUS_ACTIVE
+        _remember(record)
+    return record
+
+
+async def ensure_active_canonical_link(record: Dict[str, Any]) -> Dict[str, Any]:
+    if is_link_active(record):
+        return record
+    return await regenerate_canonical_link(record)
+
+
 async def _fetch_canonical_message(record: Dict[str, Any]) -> Optional[Message]:
     canonical_message_id = record.get("canonical_message_id")
     if canonical_message_id is None:
@@ -345,6 +390,8 @@ def _merge_replacement_record(
     refreshed: Dict[str, Any]
 ) -> Dict[str, Any]:
     refreshed["created_at"] = existing.get("created_at", refreshed["created_at"])
+    refreshed["link_status"] = existing.get("link_status", LINK_STATUS_ACTIVE)
+    refreshed["public_hash"] = existing.get("public_hash", refreshed["public_hash"])
     refreshed["seen_count"] = int(existing.get("seen_count", 0)) + 1
     refreshed["reuse_count"] = int(existing.get("reuse_count", 0))
     refreshed["first_source_chat_id"] = existing.get(

@@ -132,6 +132,8 @@ MSG_BUTTON_JOIN_CHANNEL = "📢 Join {channel_title}"
 MSG_BUTTON_GITHUB = "🛠️ GitHub"
 MSG_BUTTON_START_CHAT = "📩 Start Chat"
 MSG_BUTTON_CLOSE = "✖ Close"
+MSG_BUTTON_REVOKE_LINK = "🔒 Revoke Link"
+MSG_BUTTON_REGENERATE_LINK = "🔗 Generate New Link"
 
 
 # =====================================================================================
@@ -154,7 +156,8 @@ MSG_HELP = (
     "How to get direct download & streaming links:\n\n"
     "**🚀 Private Chat (with me):**\n"
     "> 1. Send me **any file** (document, video, audio, photo, etc.).\n"
-    "> 2. I'll instantly reply with your links! ⚡\n\n"
+    "> 2. I'll instantly reply with your links! ⚡\n"
+    "> 3. Use the 🔒 **Revoke Link** button under any link to disable it, and 🔗 **Generate New Link** to make a fresh one without re-sending the file.\n\n"
     "**👥 Using in Groups:**\n"
     "> • Reply to any file with `/link`.\n"
     "> • **Batch Mode:** Reply to the **first** file with `/link <number>` (e.g., `/link 5` for 5 files, up to {max_files}).\n"
@@ -233,6 +236,14 @@ MSG_LINKS = (
     "🖥️ **Stream Link:**\n`{stream_link}`\n\n"
     "⌛️ **Note: Links remain active while the bot is running and the file is accessible.**"
 )
+
+# ------ Link Revoke / Regenerate ------
+MSG_LINK_REVOKED_NOTE = "\n\n🔒 **This link has been revoked.** The file is still saved — tap **Generate New Link** below to create a fresh link."
+MSG_LINK_REVOKED_ALERT = "🔒 Link revoked."
+MSG_LINK_REGENERATED_ALERT = "🔗 New link generated."
+MSG_LINK_NOT_FOUND = "This link is no longer available."
+MSG_LINK_NOT_OWNER = "Only the file owner can manage this link."
+MSG_LINK_ALREADY_REVOKED = "This link is already revoked."
 
 # =====================================================================================
 # ====== USER NOTIFICATIONS ======

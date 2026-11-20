@@ -14,6 +14,8 @@ from Thunder.utils.bot_utils import quote_media_name
 from Thunder.utils.canonical_files import (
     PUBLIC_HASH_LENGTH,
     get_file_by_hash,
+    get_file_by_unique_id,
+    is_link_active,
     update_cached_file_id,
 )
 from Thunder.utils.custom_dl import ByteStreamer
@@ -319,6 +321,8 @@ async def canonical_media_preview(request: web.Request):
         file_record = await get_file_by_hash(secure_hash, raise_on_error=False)
         if not file_record:
             raise FileNotFound("Canonical file not found")
+        if not is_link_active(file_record):
+            raise FileNotFound("Canonical file link revoked")
 
         file_name = file_record.get("file_name") or f"file_{secure_hash}"
         src = f"{Var.URL.rstrip('/')}/f/{secure_hash}/{quote_media_name(file_name)}"
@@ -387,6 +391,8 @@ async def canonical_media_delivery(request: web.Request):
         file_record = await get_file_by_hash(secure_hash, raise_on_error=False)
         if not file_record:
             raise FileNotFound("Canonical file not found")
+        if not is_link_active(file_record):
+            raise FileNotFound("Canonical file link revoked")
 
         client_id, streamer = select_optimal_client()
         work_loads[client_id] += 1
@@ -462,6 +468,9 @@ async def media_delivery(request: web.Request):
             if unique_id[:SECURE_HASH_LENGTH] != secure_hash:
                 raise InvalidHash(
                     "Provided hash does not match file's unique ID.")
+            file_record = await get_file_by_unique_id(unique_id)
+            if file_record and not is_link_active(file_record):
+                raise FileNotFound("File link revoked")
             return await _serve_media_response(
                 request,
                 file_info=file_info,
