@@ -73,7 +73,7 @@
             <div class="screen">
                 {% if is_video or is_audio %}
                 <movi-player id="player" src="{{ stream_url }}" title="{{ file_name }}"
-                             controls playsinline fallback="native"
+                             controls resume playsinline fallback="native"
                              theme="dark" themecolor="#5b7fd6"></movi-player>
                 {% elif is_image %}
                 <div class="image-viewer">
