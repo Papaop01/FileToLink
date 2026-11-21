@@ -1,3 +1,10 @@
+"""Canonical file records: one entry per file, keyed by a public hash.
+
+Storage and lookup layer for the files collection, plus a bounded in-process
+cache and the ingest claim that stops two concurrent uploads of the same file
+from writing two records.
+"""
+
 import asyncio
 import datetime
 import hashlib
@@ -12,7 +19,8 @@ from pymongo.errors import DuplicateKeyError
 
 from Thunder.bot import StreamBot
 from Thunder.utils.database import db
-from Thunder.utils.file_properties import get_fname, get_media, get_uniqid
+from Thunder.utils.file_properties import (get_fname, get_media,
+                                           get_uniqid, mime_from_media)
 from Thunder.utils.logger import logger
 from Thunder.vars import Var
 
@@ -86,7 +94,7 @@ def build_file_record(
         "canonical_message_id": stored_message.id,
         "file_id": getattr(media, "file_id", None),
         "file_name": get_fname(stored_message),
-        "mime_type": _infer_mime_type(media),
+        "mime_type": mime_from_media(media),
         "file_size": getattr(media, "file_size", 0) or 0,
         "media_type": type(media).__name__.lower(),
         "first_source_chat_id": source_chat_id,
