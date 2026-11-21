@@ -1,744 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>{{ heading }}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" crossorigin="anonymous">
-<style>
-/* ================= Moonshine Night chrome ================= */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --ac1:#8fb4ff; --ac2:#5b7fd6; --ac3:#c9d9ff;
-  --gold:#e8cf8f;
-  --glow:rgba(143,180,255,.30);
-  --bg1:#04060e; --bg2:#0a1226;
-  --sky:linear-gradient(180deg,#04060e 0%,#070c1c 45%,#0a1226 100%);
-  --glass:rgba(17,26,48,.55); --glass-border:rgba(160,190,255,.15);
-  --text:#eef1f8; --muted:#8e97ad;
-  --r:18px; --r-sm:12px;
-  --trans:.22s cubic-bezier(.4,0,.2,1);
-}
-html{scrollbar-color:#2a3a5f var(--bg1)}
-body{background:var(--sky);
-  color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
-#stars{position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity .8s}
-.sky{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--sky)}
-body[data-wt="light"] #stars{opacity:0}
-.orb{position:fixed;top:6%;right:7%;width:104px;height:104px;border-radius:50%;z-index:0;pointer-events:none;
-  animation:orbFloat 9s ease-in-out infinite;transition:background .8s,box-shadow .8s}
-@keyframes orbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-.orb.moon{
-  background:radial-gradient(circle at 35% 32%,#fffdf6 0%,#f7efd6 45%,#ddcfa8 78%,#c9b98f 100%);
-  box-shadow:0 0 34px 10px rgba(253,246,214,.30),0 0 110px 44px rgba(253,246,214,.12),0 0 220px 90px rgba(160,190,255,.07)}
-.orb.moon::after{content:'';position:absolute;inset:0;border-radius:50%;
-  background:
-    radial-gradient(circle at 32% 42%, rgba(178,162,120,.38) 0 11px, transparent 12px),
-    radial-gradient(circle at 60% 60%, rgba(178,162,120,.32) 0 8px, transparent 9px),
-    radial-gradient(circle at 56% 26%, rgba(178,162,120,.28) 0 13px, transparent 14px),
-    radial-gradient(circle at 40% 72%, rgba(178,162,120,.25) 0 7px, transparent 8px)}
-.orb.sun{
-  background:radial-gradient(circle at 35% 32%,#fff6c8 0%,#ffdf6e 40%,#ffb63f 72%,#f08c14 100%);
-  box-shadow:0 0 44px 16px rgba(255,170,40,.55),0 0 130px 55px rgba(255,170,50,.30),0 0 230px 95px rgba(240,140,20,.16)}
-.orb.sun::before{content:'';position:absolute;inset:-34px;border-radius:50%;
-  background:repeating-conic-gradient(from 0deg, rgba(240,150,30,.24) 0 6deg, transparent 6deg 18deg);
-  animation:spinSlow 46s linear infinite}
-@keyframes spinSlow{to{transform:rotate(360deg)}}
-.page{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:18px 16px 70px}
-.top{position:sticky;top:0;z-index:200;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  background:rgba(4,6,14,.55);border-bottom:1px solid var(--glass-border)}
-.top-in{max-width:860px;margin:0 auto;padding:13px 18px;display:flex;align-items:center;gap:12px}
-.brand-ico{font-size:1.35rem;color:#f7efd6;display:inline-flex;filter:drop-shadow(0 0 8px rgba(253,246,214,.7))}
-.brand-name{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;letter-spacing:1px;line-height:1;
-  background:linear-gradient(120deg,#fdf6d6,#c9d9ff 60%,#8fb4ff);
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.brand-sub{font-size:.64rem;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-top:3px}
-/* ================= file card ================= */
-.file-card{margin-top:18px;display:flex;gap:14px;align-items:center;background:var(--glass);
-  border:1px solid var(--glass-border);border-radius:var(--r);padding:16px 18px;
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  box-shadow:0 10px 30px rgba(0,0,0,.45)}
-.fc-ico{flex:none;width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;
-  font-size:1.2rem;color:#0a1226;background:linear-gradient(135deg,var(--gold),#f7efd6);
-  box-shadow:0 0 18px rgba(232,207,143,.35)}
-.fc-label{font-size:.62rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
-.fc-name{font-size:.95rem;font-weight:600;margin-top:3px;word-break:break-word;color:var(--text)}
-.fc-size{font-size:.78rem;color:var(--muted);margin-top:4px}
-/* ================= HEVC warning ================= */
-.warn{margin-top:14px;display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:var(--r-sm);
-  background:rgba(232,180,90,.08);border:1px solid rgba(232,180,90,.35);
-  font-size:.82rem;line-height:1.5;color:#f0dfae}
-.warn i{color:#e8b45a;font-size:1rem;margin-top:2px;flex:none}
-.warn[hidden]{display:none}
-/* ================= actions ================= */
-.actions{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.btn-primary{display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:none;
-  padding:15px 18px;border-radius:16px;font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700;color:#0a1226;
-  background:linear-gradient(135deg,#fdf6d6,#e8cf8f 55%,#c9a95f);
-  box-shadow:0 8px 26px rgba(232,207,143,.28);transition:transform var(--trans),box-shadow var(--trans)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(232,207,143,.4)}
-.btn-primary:active{transform:translateY(0)}
-.btn-download{display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;
-  padding:15px 18px;border-radius:16px;font-size:.95rem;font-weight:700;color:#fff;
-  background:linear-gradient(135deg,#a9c6ff,#5b7fd6 55%,#3d5aa6);
-  box-shadow:0 8px 26px rgba(91,127,214,.45),inset 0 1px 0 rgba(255,255,255,.35);
-  transition:transform var(--trans),box-shadow var(--trans)}
-.btn-download:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(91,127,214,.6),inset 0 1px 0 rgba(255,255,255,.35)}
-.btn-download:active{transform:translateY(0)}
-/* theme switch */
-.theme-switch{margin-left:auto;flex:none;width:60px;height:31px;border-radius:20px;cursor:pointer;
-  border:1px solid var(--glass-border);background:var(--glass);position:relative;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background var(--trans)}
-.ts-knob{position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;
-  background:linear-gradient(135deg,#fdf6d6,#e8cf8f);color:#5a4a12;
-  display:flex;align-items:center;justify-content:center;font-size:.68rem;
-  transition:left var(--trans);box-shadow:0 2px 8px rgba(0,0,0,.35)}
-body[data-wt="light"] .ts-knob{left:32px;background:linear-gradient(135deg,#fff3c4,#ffb63f);color:#7a4d00}
-/* ================= light (sunshine) theme: blue sky ================= */
-body[data-wt="light"]{
-  --sky:linear-gradient(180deg,#8ecdf5 0%,#bfe3fd 42%,#e4f3ff 75%,#f2f9ff 100%);
-  --text:#16294d; --muted:#4d6488;
-  --glass:rgba(255,255,255,.60); --glass-border:rgba(90,140,200,.35);
-  --glow:rgba(120,180,255,.40);
-}
-body[data-wt="light"] .top{background:rgba(238,247,255,.62)}
-body[data-wt="light"] .brand-name{background-image:linear-gradient(120deg,#0f5cab,#2f8fdd 55%,#0a3f7e)}
-body[data-wt="light"] .modal-title{background-image:linear-gradient(120deg,#0f5cab,#2f8fdd)}
-body[data-wt="light"] .modal{background:rgba(30,50,80,.45)}
-body[data-wt="light"] .modal-sheet{background:rgba(244,250,255,.96)}
-body[data-wt="light"] .warn{color:#7a5410;background:rgba(200,140,40,.10)}
-body[data-wt="light"] .file-card{box-shadow:0 10px 30px rgba(70,120,180,.20)}
-body[data-wt="light"] .fc-ico{box-shadow:0 0 18px rgba(255,180,60,.50)}
-body[data-wt="light"] .eb{background:rgba(47,95,192,.06)}
-body[data-wt="light"] .eb:hover{background:rgba(47,95,192,.12);border-color:rgba(47,95,192,.4)}
-body[data-wt="light"] .btn-primary{box-shadow:0 8px 26px rgba(255,170,60,.45),inset 0 1px 0 rgba(255,255,255,.5)}
-body[data-wt="light"] footer{color:#5a6f8c}
-body[data-wt="light"] .brand-ico{color:#f0a020;filter:drop-shadow(0 0 8px rgba(255,180,60,.55))}
-/* clouds (light mode only) */
-.cloud{display:none;position:fixed;z-index:0;pointer-events:none;background:#fff;border-radius:999px;opacity:.9;
-  filter:drop-shadow(0 10px 18px rgba(110,150,210,.28))}
-.cloud::before,.cloud::after{content:'';position:absolute;background:#fff;border-radius:50%}
-.cloud.c1{width:132px;height:38px;top:11%;animation:drift 70s linear infinite}
-.cloud.c1::before{width:58px;height:58px;top:-27px;left:24px}
-.cloud.c1::after{width:38px;height:38px;top:-17px;left:68px}
-.cloud.c2{width:96px;height:30px;top:24%;animation:drift 95s linear infinite;animation-delay:-30s;opacity:.75}
-.cloud.c2::before{width:44px;height:44px;top:-21px;left:16px}
-.cloud.c2::after{width:30px;height:30px;top:-13px;left:50px}
-.cloud.c3{width:160px;height:44px;top:5%;animation:drift 125s linear infinite;animation-delay:-70s;opacity:.65}
-.cloud.c3::before{width:70px;height:70px;top:-32px;left:30px}
-.cloud.c3::after{width:46px;height:46px;top:-21px;left:84px}
-body[data-wt="light"] .cloud{display:block}
-@keyframes drift{from{transform:translateX(-25vw)}to{transform:translateX(125vw)}}
-/* ================= external players modal ================= */
-.modal{position:fixed;inset:0;z-index:500;display:flex;align-items:flex-end;justify-content:center;
-  background:rgba(2,4,10,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-  opacity:0;pointer-events:none;transition:opacity var(--trans)}
-.modal.open{opacity:1;pointer-events:auto}
-.modal-sheet{width:100%;max-width:480px;background:rgba(13,20,38,.94);
-  border:1px solid var(--glass-border);border-bottom:none;border-radius:22px 22px 0 0;
-  padding:26px 22px calc(22px + env(safe-area-inset-bottom));
-  transform:translateY(40px);transition:transform var(--trans)}
-.modal.open .modal-sheet{transform:translateY(0)}
-.modal-title{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:700;text-align:center;
-  background:linear-gradient(120deg,#fdf6d6,#c9d9ff);
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  margin-bottom:18px}
-.ebw{display:flex;flex-direction:column;gap:10px}
-.eb{display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;
-  padding:14px;border-radius:14px;font-size:.92rem;font-weight:600;color:var(--text);
-  background:rgba(143,180,255,.07);border:1px solid var(--glass-border);
-  transition:background var(--trans),border-color var(--trans)}
-.eb:hover{background:rgba(143,180,255,.14);border-color:rgba(143,180,255,.4)}
-.eb.dl{color:var(--gold);border-color:rgba(232,207,143,.3)}
-#extClose{width:100%;margin-top:14px}
-/* ================= footer & toast ================= */
-footer{position:relative;z-index:1;text-align:center;padding:26px 16px 40px;color:var(--muted);font-size:.8rem}
-#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:rgba(10,16,32,.92);border:1px solid var(--glass-border);color:var(--text);
-  padding:11px 20px;border-radius:30px;font-size:.83rem;z-index:600;display:none;opacity:0;
-  transition:opacity .3s,transform .3s;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  white-space:nowrap;max-width:92vw}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(min-width:640px){.modal{align-items:center}.modal-sheet{border-radius:22px;border-bottom:1px solid var(--glass-border)}}
-@media(max-width:480px){.actions{grid-template-columns:1fr}.orb{width:72px;height:72px;top:9%;right:5%}}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ file_name }} &mdash; {{ site_name }}</title>
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf9f7">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#04060e">
+    <meta name="robots" content="noindex, nofollow">
 
-/* ---------- player ---------- */
-.pw{position:relative;background:#000;border-radius:var(--r);overflow:hidden;user-select:none;
-  box-shadow:0 0 0 1px var(--glass-border),0 20px 60px rgba(0,0,0,.7),0 0 90px 8px var(--amb,var(--glow))}
-.pw:fullscreen{border-radius:0}
-video#vid{width:100%;aspect-ratio:16/9;max-height:540px;display:block;background:#000}
-.pw:fullscreen video#vid{max-height:100vh;height:100vh}
-.spin{position:absolute;top:50%;left:50%;width:48px;height:48px;border-radius:50%;
-  border:3px solid rgba(255,255,255,.12);border-top-color:var(--ac1);
-  transform:translate(-50%,-50%);animation:spin .7s linear infinite;display:none;pointer-events:none}
-@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-.skip-flash{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);color:#fff;
-  font-size:.8rem;font-weight:600;padding:8px 16px;border-radius:20px;display:flex;align-items:center;gap:6px;
-  opacity:0;transition:opacity .15s;pointer-events:none}
-.skip-flash.show{opacity:1}
-.skip-flash.left{left:12%}.skip-flash.right{right:12%}
-.cbw{position:absolute;bottom:0;left:0;right:0;padding:36px 12px 10px;display:flex;flex-direction:column;gap:6px;
-  background:linear-gradient(transparent,rgba(0,0,0,.9) 55%);
-  opacity:0;transition:opacity .3s;pointer-events:none}
-.pw.sc .cbw{opacity:1;pointer-events:all}
-.prog{position:relative;height:3px;background:rgba(255,255,255,.2);border-radius:4px;cursor:pointer;transition:height .2s;margin:0 8px 2px;touch-action:none}
-.prog:hover{height:5px}
-.prog-buf{position:absolute;top:0;bottom:0;left:0;background:rgba(255,255,255,.18);border-radius:4px;width:0}
-.prog-fill{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(90deg,var(--ac2),var(--ac1));border-radius:4px;width:0}
-.prog-thumb{position:absolute;top:50%;right:-7px;transform:translateY(-50%) scale(0);width:14px;height:14px;
-  border-radius:50%;background:#fff;box-shadow:0 0 8px var(--glow);transition:transform .2s}
-.prog:hover .prog-thumb{transform:translateY(-50%) scale(1)}
-.br{display:flex;align-items:center;gap:2px}
-.cb{background:none;border:none;color:rgba(255,255,255,.9);cursor:pointer;padding:7px 8px;border-radius:8px;
-  font-size:.9rem;display:flex;align-items:center;transition:background var(--trans),transform var(--trans)}
-.cb:hover{background:rgba(255,255,255,.12);color:#fff}
-.cb:active{transform:scale(.9)}
-.td{font-size:.76rem;color:rgba(255,255,255,.8);white-space:nowrap;margin:0 5px}
-.spacer{flex:1}
-.vw{position:relative;display:flex;align-items:center}
-.vs-pop{position:absolute;bottom:calc(100% + 14px);left:50%;transform:translateX(-50%) translateY(8px);
-  background:rgba(8,8,20,.94);border:1px solid var(--glass-border);border-radius:12px;
-  padding:12px 8px 8px;display:none;flex-direction:column;align-items:center;gap:8px;
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:60;
-  opacity:0;transition:opacity .2s,transform .2s}
-.vw.open .vs-pop{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
-@media (hover:hover){ .vw:hover .vs-pop{display:flex;opacity:1;transform:translateX(-50%) translateY(0)} }
-.vs-wrap{width:36px;height:110px;position:relative}
-.vs{position:absolute;top:50%;left:50%;width:110px;transform:translate(-50%,-50%) rotate(-90deg);
-  -webkit-appearance:none;appearance:none;height:4px;border-radius:4px;outline:none;
-  background:rgba(255,255,255,.25);cursor:pointer}
-.vs::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--glow);cursor:pointer}
-.vs::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:#fff;border:none;cursor:pointer}
-.vs-mu{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:6px;border-radius:8px}
-.vs-mu:hover{color:#fff;background:rgba(255,255,255,.08)}
-/* ---------- settings panel ---------- */
-#sp{position:absolute;bottom:60px;right:10px;z-index:50;width:250px;max-width:calc(100vw - 22px);
-  background:rgba(8,8,20,.85);backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:14px;
-  padding:14px 15px;display:none;flex-direction:column;gap:12px;
-  box-shadow:0 8px 40px rgba(0,0,0,.8),0 0 0 1px rgba(143,180,255,.15)}
-#sp.open{display:flex}
-.spt{font-size:.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
-  background:linear-gradient(90deg,var(--ac3),var(--ac1));
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  border-bottom:1px solid rgba(143,180,255,.2);padding-bottom:8px}
-.spl{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:500;margin-bottom:6px;display:block}
-.spsel{width:100%;background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--glass-border);
-  border-radius:8px;padding:8px 10px;font-size:.8rem;cursor:pointer;outline:none;font-family:'Inter',sans-serif;
-  -webkit-appearance:none;appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238888aa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 10px center}
-.spsel option{background:#0a0a1a}
+    <link rel="icon" type="image/png" href="{{ logo_url }}">
+    <link rel="apple-touch-icon" href="{{ logo_url }}">
 
-/* ---------- mobile: bigger touch targets ---------- */
-@media (max-width:640px){
-  .cb{padding:13px 12px;font-size:1.25rem}
-  .cbw{padding:46px 10px 14px}
-  .prog{height:5px;margin-bottom:4px}
-  .prog-thumb{transform:translateY(-50%) scale(1);width:16px;height:16px}
-  .td{font-size:.85rem;margin:0 6px}
-  #sp{bottom:76px;right:8px}
-  .skip-flash{font-size:.9rem;padding:10px 18px}
-}
-@media (max-width:480px){
-  .cb{padding:12px 8px;font-size:1.15rem}
-  .td{font-size:.72rem}
-  .br{gap:0}
-}
-/* resume chip */
-.resume-chip{position:absolute;left:50%;bottom:88px;transform:translateX(-50%) translateY(10px);
-  display:none;align-items:center;gap:10px;z-index:55;white-space:nowrap;
-  background:rgba(8,8,20,.92);border:1px solid rgba(143,180,255,.45);border-radius:30px;
-  padding:8px 8px 8px 16px;font-size:.8rem;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .25s,transform .25s}
-.resume-chip.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
-.resume-chip .rgo{background:var(--ac1);border:none;color:#fff;font-size:.78rem;font-weight:600;
-  padding:7px 14px;border-radius:20px;cursor:pointer;font-family:'Inter',sans-serif}
-.resume-chip .rx{background:none;border:none;color:var(--muted);cursor:pointer;padding:7px 10px;font-size:.85rem;border-radius:12px}
-.resume-chip .rx:hover{color:#fff}
-/* bigger controls in fullscreen (helps landscape phones) */
-.pw:fullscreen .cb,.pw:-webkit-full-screen .cb{padding:14px 13px;font-size:1.35rem}
-.pw:fullscreen .cbw,.pw:-webkit-full-screen .cbw{padding:52px 12px 16px}
-.pw:fullscreen .prog,.pw:-webkit-full-screen .prog{height:5px;margin-bottom:4px}
-.pw:fullscreen .prog-thumb,.pw:-webkit-full-screen .prog-thumb{transform:translateY(-50%) scale(1);width:16px;height:16px}
-.pw:fullscreen .td,.pw:-webkit-full-screen .td{font-size:.9rem;margin:0 8px}
-.pw:fullscreen #sp,.pw:-webkit-full-screen #sp{bottom:88px}
-.pw:fullscreen .resume-chip,.pw:-webkit-full-screen .resume-chip{bottom:104px}
-</style>
+    <meta name="description" content="A premium cinema experience for '{{ file_name }}'. Stream in high quality with advanced controls.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ file_name }} &mdash; {{ site_name }}">
+    <meta property="og:description" content="Stream '{{ file_name }}' in a beautiful, atmospheric environment with professional playback controls.">
+    <meta property="og:image" content="{{ logo_url }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ file_name }} &mdash; {{ site_name }}">
+    <meta name="twitter:description" content="Stream '{{ file_name }}' in a beautiful, atmospheric environment.">
+    <meta name="twitter:image" content="{{ logo_url }}">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <!-- Pinned deliberately: this is the primary playback path, so an upstream
+         release must never reach users unreviewed. -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/movi-player@0.4.1/dist/element.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet" media="print" onload="this.media='all'" crossorigin="anonymous">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet" crossorigin="anonymous">
+    </noscript>
+
+    <link rel="stylesheet" href="/assets/player.css?v={{ asset_version }}">
 </head>
+
 <body>
-<div class="sky"></div>
-<canvas id="stars"></canvas>
-<div class="orb moon" id="orb"></div>
-<div class="cloud c1"></div>
-<div class="cloud c2"></div>
-<div class="cloud c3"></div>
-<header class="top"><div class="top-in">
-  <span class="brand-ico"><i class="fa fa-moon" id="brandIco"></i></span>
-  <div><div class="brand-name">Wolf</div><div class="brand-sub" id="brandSub">moonlight streaming</div></div>
-  <button class="theme-switch" id="themeToggle" title="Light / Dark mode"><span class="ts-knob"><i class="fa fa-moon" id="themeIcon"></i></span></button>
-</div></header>
-<div class="page">
-
-<div class="pw sc" id="pw">
-    <video id="vid" src="{{ src|safe }}" preload="metadata" playsinline></video>
-    <div class="spin" id="spn"></div>
-    <div class="skip-flash left" id="sfL"><i class="fa fa-backward"></i>&nbsp;10s</div>
-    <div class="skip-flash right" id="sfR">10s&nbsp;<i class="fa fa-forward"></i></div>
-
-    <div id="sp">
-      <div class="spt"><i class="fa fa-sliders"></i>&nbsp;Player Settings</div>
-      <div>
-        <span class="spl">⚡ Speed</span>
-        <select class="spsel" id="spSpd">
-          <option value="0.25">0.25×</option>
-          <option value="0.5">0.5×</option>
-          <option value="0.75">0.75×</option>
-          <option value="1" selected>1× Normal</option>
-          <option value="1.25">1.25×</option>
-          <option value="1.5">1.5×</option>
-          <option value="1.75">1.75×</option>
-          <option value="2">2×</option>
-        </select>
-      </div>
+    <div class="atmosphere" aria-hidden="true">
+        <div class="gradient-mesh"></div>
+        <div class="noise"></div>
+        <div class="vignette"></div>
     </div>
 
-    <div class="resume-chip" id="resumeChip">
-      <span id="resumeTxt"></span>
-      <button class="rgo" id="resumeGo">Resume</button>
-      <button class="rx" id="resumeNo" title="Dismiss">✕</button>
-    </div>
+    <main class="viewport">
+        <header class="masthead">
+            <div class="title-group">
+                <span class="title-dot" aria-hidden="true"></span>
+                <h1 class="title" title="{{ file_name }}">{{ file_name }}</h1>
+                <div class="file-meta" id="fileMeta">
+                    <span class="meta-tag" id="metaSize"><span class="sr-only">Size: </span>
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                        </svg>
+                        <span>{{ size_formatted }}</span>
+                    </span>
+                </div>
+            </div>
+            <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <svg class="icon-sun" viewBox="0 0 24 24">
+                    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 000-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z" />
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24">
+                    <path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
+                </svg>
+            </button>
+        </header>
 
-    <div class="cbw" id="cbw">
-      <div class="prog" id="prog"><div class="prog-buf" id="pb"></div><div class="prog-fill" id="pf"><div class="prog-thumb"></div></div></div>
-      <div class="br">
-        <button class="cb" id="bRw" title="Rewind 10s"><i class="fa fa-rotate-left"></i></button>
-        <button class="cb" id="bPl" title="Play/Pause" style="font-size:1rem"><i class="fa fa-play" id="pIco"></i></button>
-        <button class="cb" id="bFw" title="Forward 10s"><i class="fa fa-rotate-right"></i></button>
-        <span class="td" id="td">0:00 / 0:00</span>
-        <div class="spacer"></div>
-        <div class="vw" id="vw">
-          <button class="cb" id="bMu" title="Volume"><i class="fa fa-volume-high" id="vIco"></i></button>
-          <div class="vs-pop" id="vsPop">
-            <div class="vs-wrap"><input type="range" class="vs" id="vs" min="0" max="1" step="0.02" value="1"></div>
-            <button class="vs-mu" id="bMu2" title="Mute/Unmute"><i class="fa fa-volume-xmark" id="vIco2"></i></button>
-          </div>
+        <section class="cinema{% if is_video %}{% elif is_audio %} cinema--audio{% else %} cinema--fallback{% endif %}">
+            <div class="screen">
+                {% if is_video or is_audio %}
+                <movi-player id="player" src="{{ stream_url }}" title="{{ file_name }}"
+                             controls resume playsinline fallback="native"
+                             theme="dark" themecolor="#5b7fd6"></movi-player>
+                {% elif is_image %}
+                <div class="image-viewer">
+                    <img src="{{ stream_url }}" alt="Preview of {{ file_name }}" loading="lazy">
+                </div>
+                {% else %}
+                <div class="non-media">
+                    <p>{{ mime_type }} isn't a media file, so there is nothing to play.</p>
+                    <a class="cmd-btn primary" href="{{ download_url }}" download aria-label="Download {{ file_name }}">Download</a>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <div class="command-bar" role="toolbar" aria-label="File actions">
+            <div class="command-glass">
+                <a href="{{ download_url }}" download="{{ file_name }}" class="cmd-btn primary" id="downloadBtn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                    </svg>
+                    <span>Download</span>
+                </a>
+
+                <div class="cmd-divider"></div>
+
+                <button type="button" class="cmd-btn" id="copyBtn" aria-label="Copy Link">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                    </svg>
+                    <span>Copy Link</span>
+                </button>
+
+                <div class="cmd-divider"></div>
+
+                <button type="button" class="cmd-btn drawer-trigger" id="playersToggle" aria-expanded="false" aria-controls="drawerPanel" aria-label="Open in external player">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9.5 7.5v9l7-4.5-7-4.5z" />
+                    </svg>
+                    <span>Open In</span>
+                    <svg class="chevron" viewBox="0 0 24 24">
+                        <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                    </svg>
+                </button>
+            </div>
         </div>
-        <button class="cb" id="bSet" title="Settings"><i class="fa fa-gear"></i></button>
-        <button class="cb" id="bPip" title="Picture-in-Picture"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="2" y="4" width="20" height="14" rx="2"/><rect x="12" y="10" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg></button>
-        <button class="cb" id="bFs" title="Fullscreen"><i class="fa fa-expand" id="fsIco"></i></button>
-      </div>
-    </div>
-  </div>
 
-  <div class="file-card">
-    <div class="fc-ico"><i class="fa fa-file-video"></i></div>
-    <div>
-      <div class="fc-label">File Name</div>
-      <div class="fc-name">{{ file_name }}</div>
-      {% if file_size %}<div class="fc-size"><i class="fa fa-hard-drive"></i>&nbsp;{{ file_size }}</div>{% endif %}
-    </div>
-  </div>
+        <aside class="drawer" id="playersDrawer" aria-label="External players">
+            <div class="drawer-panel" id="drawerPanel" inert>
+                <div class="player-group" id="androidGroup" role="group" aria-labelledby="androidGroupLabel">
+                    <h2 class="group-label" id="androidGroupLabel">Android</h2>
+                    <div class="player-grid">
+                        <a href="#" data-player="android-chooser" class="player-link">
+                            <span class="player-icon" style="--icon-hue:180" aria-hidden="true">CH</span>
+                            Choose App
+                        </a>
+                        <a href="#" data-player="android-vlc" class="player-link">
+                            <span class="player-icon" style="--icon-hue:30" aria-hidden="true">VL</span>
+                            VLC
+                        </a>
+                        <a href="#" data-player="android-vlc-beta" class="player-link">
+                            <span class="player-icon" style="--icon-hue:35" aria-hidden="true">VB</span>
+                            VLC Beta
+                        </a>
+                        <a href="#" data-player="android-mx" class="player-link">
+                            <span class="player-icon" style="--icon-hue:265" aria-hidden="true">MX</span>
+                            MX Player
+                        </a>
+                        <a href="#" data-player="android-mx-pro" class="player-link">
+                            <span class="player-icon" style="--icon-hue:45" aria-hidden="true">MX</span>
+                            MX Player Pro
+                        </a>
+                        <a href="#" data-player="android-splayer" class="player-link">
+                            <span class="player-icon" style="--icon-hue:200" aria-hidden="true">SP</span>
+                            Splayer
+                        </a>
+                        <a href="#" data-player="android-next" class="player-link">
+                            <span class="player-icon" style="--icon-hue:160" aria-hidden="true">NP</span>
+                            Next Player
+                        </a>
+                        <a href="#" data-player="android-nova" class="player-link">
+                            <span class="player-icon" style="--icon-hue:320" aria-hidden="true">NV</span>
+                            Nova Player
+                        </a>
+                        <a href="#" data-player="android-mpv" class="player-link">
+                            <span class="player-icon" style="--icon-hue:100" aria-hidden="true">MP</span>
+                            MPV-Android
+                        </a>
+                        <a href="#" data-player="android-just" class="player-link">
+                            <span class="player-icon" style="--icon-hue:15" aria-hidden="true">JP</span>
+                            Just Player
+                        </a>
+                        <a href="#" data-player="android-nplayer" class="player-link">
+                            <span class="player-icon" style="--icon-hue:230" aria-hidden="true">nP</span>
+                            nPlayer
+                        </a>
+                    </div>
+                </div>
 
-  <div class="warn" id="hevcWarn" hidden>
-    <i class="fa fa-triangle-exclamation"></i>
-    <div><b>Important:</b> HEVC (H.265) or Dolby audio may not play in browsers. Use an external player for smooth playback.</div>
-  </div>
+                <div class="player-group" id="iosGroup" role="group" aria-labelledby="iosGroupLabel">
+                    <h2 class="group-label" id="iosGroupLabel">iOS / iPadOS</h2>
+                    <div class="player-grid">
+                        <a href="#" data-player="ios-vlc" class="player-link">
+                            <span class="player-icon" style="--icon-hue:30" aria-hidden="true">VL</span>
+                            VLC
+                        </a>
+                        <a href="#" data-player="ios-infuse" class="player-link">
+                            <span class="player-icon" style="--icon-hue:280" aria-hidden="true">IN</span>
+                            Infuse
+                        </a>
+                        <a href="#" data-player="ios-nplayer" class="player-link">
+                            <span class="player-icon" style="--icon-hue:230" aria-hidden="true">nP</span>
+                            nPlayer
+                        </a>
+                        <a href="#" data-player="ios-outplayer" class="player-link">
+                            <span class="player-icon" style="--icon-hue:190" aria-hidden="true">OU</span>
+                            Outplayer
+                        </a>
+                        <a href="#" data-player="ios-oplayer" class="player-link">
+                            <span class="player-icon" style="--icon-hue:140" aria-hidden="true">OP</span>
+                            OPlayer
+                        </a>
+                    </div>
+                </div>
 
-  <div class="actions">
-    <button class="btn-primary" id="extBtn"><i class="fa fa-circle-play"></i> External Players</button>
-    <a class="btn-download" href="{{ download_url|safe }}" download="{{ file_name }}"><i class="fa fa-download"></i> Download</a>
-  </div>
+                <div class="player-group" id="desktopGroup" role="group" aria-labelledby="desktopGroupLabel">
+                    <h2 class="group-label" id="desktopGroupLabel">Desktop</h2>
+                    <div class="player-grid">
+                        <a href="#" data-player="desktop-vlc" class="player-link">
+                            <span class="player-icon" style="--icon-hue:30" aria-hidden="true">VL</span>
+                            VLC
+                        </a>
+                        <a href="#" data-player="desktop-potplayer" class="player-link" data-os="windows">
+                            <span class="player-icon" style="--icon-hue:5" aria-hidden="true">PP</span>
+                            PotPlayer
+                        </a>
+                        <a href="#" data-player="desktop-iina" class="player-link" data-os="mac">
+                            <span class="player-icon" style="--icon-hue:210" aria-hidden="true">II</span>
+                            IINA
+                        </a>
+                        <a href="#" data-player="desktop-mpv" class="player-link">
+                            <span class="player-icon" style="--icon-hue:100" aria-hidden="true">MP</span>
+                            MPV
+                        </a>
+                        <a href="#" data-player="desktop-kmplayer" class="player-link" data-os="windows">
+                            <span class="player-icon" style="--icon-hue:55" aria-hidden="true">KM</span>
+                            KMPlayer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
 
-</div>
-<footer><i class="fa fa-moon" id="footIcon"></i> <span id="footText">Stream under the moonlight</span> · <b>Wolf</b></footer>
+        <footer class="footer-group">
 
-<div class="modal" id="extModal" aria-hidden="true">
-  <div class="modal-sheet">
-    <div class="modal-title">Select Player</div>
-    <div class="ebw" id="ebs"></div>
-    <button class="btn-primary" id="extClose">Close</button>
-  </div>
-</div>
-<div id="toast"></div>
+            <div class="copyright-footer">
+                <span>&copy; <span id="copyrightYear"></span> {{ site_name }}</span>
+                <span class="footer-separator">&#8226;</span>
+                <a href="{{ repo_url }}" target="_blank" rel="noopener noreferrer" class="footer-link" aria-label="GitHub">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2" />
+                    </svg>
+                    GitHub
+                </a>
+            </div>
+        </footer>
 
-<script>
+        <div class="watermark" aria-hidden="true">{{ site_name }}</div>
+    </main>
 
-const STREAM_URL = {{ src|tojson }};
-const FILE_URL   = {{ download_url|tojson }};
-const FILE_NAME  = {{ file_name|tojson }};
-const IS_TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-const vid = document.getElementById('vid'),
-      pw = document.getElementById('pw'),
-      spn = document.getElementById('spn'),
-      prog = document.getElementById('prog'),
-      pf = document.getElementById('pf'),
-      pb = document.getElementById('pb'),
-      td = document.getElementById('td'),
-      pIco = document.getElementById('pIco'),
-      vIco = document.getElementById('vIco'),
-      fsIco = document.getElementById('fsIco'),
-      vs = document.getElementById('vs'),
-      vw = document.getElementById('vw'),
-      spPanel = document.getElementById('sp'),
-      spSpd = document.getElementById('spSpd'),
-      sfL = document.getElementById('sfL'),
-      sfR = document.getElementById('sfR'),
-      toastEl = document.getElementById('toast');
+    <noscript class="noscript-warning">JavaScript is required for browser playback and external-player shortcuts. You can still use the Download button if visible.</noscript>
 
-function toast(m){
-  toastEl.textContent = m;
-  toastEl.style.display = 'block';
-  requestAnimationFrame(()=>toastEl.classList.add('show'));
-  clearTimeout(toastEl._t);
-  toastEl._t = setTimeout(()=>{toastEl.classList.remove('show');setTimeout(()=>toastEl.style.display='none',300);},2500);
-}
-function fmt(s){
-  if(!isFinite(s)||s<0) s=0;
-  s=Math.floor(s);
-  const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60;
-  const p=n=>String(n).padStart(2,'0');
-  return h? h+':'+p(m)+':'+p(ss) : m+':'+p(ss);
-}
-/* playback */
-function togglePlay(){ if(vid.paused){ vid.play().catch(()=>{}); } else { vid.pause(); } }
-document.getElementById('bPl').onclick = e=>{e.stopPropagation();togglePlay();};
-vid.addEventListener('play', ()=>{pIco.className='fa fa-pause';showCtrl();});
-vid.addEventListener('pause',()=>{pIco.className='fa fa-play';pw.classList.add('sc');});
-vid.addEventListener('ended',()=>{pIco.className='fa fa-play';});
-vid.addEventListener('waiting',()=>{spn.style.display='block';});
-vid.addEventListener('playing',()=>{spn.style.display='none';});
-vid.addEventListener('canplay',()=>{spn.style.display='none';});
-pw.addEventListener('click', e=>{
-  if(e.target.closest('.cbw,#sp')) return;
-  if(Date.now()-justScrubbedAt<600) return;
-  vw.classList.remove('open');
-  if(IS_TOUCH){ showCtrl(); } else { togglePlay(); }
-  spPanel.classList.remove('open');
-});
-/* skip */
-function flash(el){ el.classList.add('show'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),600); }
-function skip(s){
-  if(!isFinite(vid.duration)) return;
-  vid.currentTime = Math.min(Math.max(0, vid.currentTime+s), vid.duration||0);
-  flash(s<0?sfL:sfR);
-}
-document.getElementById('bRw').onclick = e=>{e.stopPropagation();skip(-10);};
-document.getElementById('bFw').onclick = e=>{e.stopPropagation();skip(10);};
-/* double-tap skip on touch */
-let lastTap=0,lastX=0;
-pw.addEventListener('touchend', e=>{
-  const now=Date.now(), x=e.changedTouches[0].clientX;
-  if(now-lastTap<300 && Math.abs(x-lastX)<60){
-    const r=pw.getBoundingClientRect();
-    skip(x < r.left + r.width/2 ? -10 : 10);
-    e.preventDefault();
-  }
-  lastTap=now; lastX=x;
-});
-/* progress + time */
-vid.addEventListener('timeupdate', ()=>{
-  if(scrubbing) return;
-  const d=vid.duration||0, c=vid.currentTime||0;
-  pf.style.width = d? (c/d*100)+'%' : '0%';
-  td.textContent = fmt(c)+' / '+fmt(d);
-});
-vid.addEventListener('progress', ()=>{
-  try{
-    if(vid.buffered.length && isFinite(vid.duration) && vid.duration>0){
-      pb.style.width = (vid.buffered.end(vid.buffered.length-1)/vid.duration*100)+'%';
-    }
-  }catch(e){}
-});
-let scrubbing=false, scrubRatio=0, scrubMoved=false, scrubDownX=0, justScrubbedAt=0;
-function ratioFromClientX(clientX){
-  const r=prog.getBoundingClientRect();
-  return Math.min(Math.max(0,(clientX-r.left)/r.width),1);
-}
-function paintScrub(){
-  const d=vid.duration||0;
-  if(!(d>0)) return;
-  pf.style.width=(scrubRatio*100)+'%';
-  td.textContent=fmt(scrubRatio*d)+' / '+fmt(d);
-}
-prog.addEventListener('pointerdown', e=>{
-  scrubbing=true; scrubMoved=false; scrubDownX=e.clientX;
-  scrubRatio=ratioFromClientX(e.clientX);
-  paintScrub();
-  try{prog.setPointerCapture(e.pointerId);}catch(err){}
-  e.preventDefault();
-});
-window.addEventListener('pointermove', e=>{
-  if(!scrubbing) return;
-  if(Math.abs(e.clientX-scrubDownX)>8) scrubMoved=true;
-  scrubRatio=ratioFromClientX(e.clientX);
-  paintScrub();
-},{passive:true});
-function endScrub(commit){
-  if(!scrubbing) return;
-  scrubbing=false;
-  const d=vid.duration||0;
-  if(commit&&d>0) vid.currentTime=scrubRatio*d;
-  if(scrubMoved) justScrubbedAt=Date.now();
-}
-window.addEventListener('pointerup', ()=>endScrub(true));
-window.addEventListener('pointercancel', ()=>endScrub(false));
-/* volume */
-const vIco2 = document.getElementById('vIco2');
-function syncVolIcon(){
-  const off = vid.muted||vid.volume===0;
-  vIco.className = 'fa ' + (off ? 'fa-volume-xmark' : vid.volume<0.5 ? 'fa-volume-low' : 'fa-volume-high');
-  vIco2.className = 'fa ' + (off ? 'fa-volume-xmark' : 'fa-volume-high');
-}
-function toggleMute(){
-  vid.muted=!vid.muted;
-  if(!vid.muted&&vid.volume===0){vid.volume=0.5;vs.value=0.5;}
-  syncVolIcon();
-}
-vs.addEventListener('input', ()=>{vid.volume=parseFloat(vs.value);vid.muted=(vid.volume===0);syncVolIcon();});
-document.getElementById('bMu').onclick = e=>{
-  e.stopPropagation();
-  if(IS_TOUCH){ vw.classList.toggle('open'); } else { toggleMute(); }
-};
-document.getElementById('bMu2').onclick = e=>{e.stopPropagation();toggleMute();};
-/* auto-hide controls */
-let hideT=null;
-function showCtrl(){
-  pw.classList.add('sc');
-  clearTimeout(hideT);
-  hideT=setTimeout(()=>{ if(!vid.paused) pw.classList.remove('sc'); },3000);
-}
-['mousemove','touchstart'].forEach(ev=>pw.addEventListener(ev,showCtrl,{passive:true}));
-showCtrl();
-/* fullscreen */
-function syncFsIcon(){
-  const fs=!!(document.fullscreenElement||document.webkitFullscreenElement||vid.webkitDisplayingFullscreen);
-  fsIco.className='fa '+(fs?'fa-compress':'fa-expand');
-}
-function toggleFs(){
-  const doc=document;
-  if(doc.fullscreenElement||doc.webkitFullscreenElement){
-    if(doc.exitFullscreen) doc.exitFullscreen().catch(()=>{});
-    else if(doc.webkitExitFullscreen) doc.webkitExitFullscreen();
-    return;
-  }
-  const tryVideoFs=()=>{
-    if(typeof vid.webkitEnterFullscreen==='function'){
-      try{vid.webkitEnterFullscreen();return true;}catch(e){return false;}
-    }
-    return false;
-  };
-  const req=pw.requestFullscreen||pw.webkitRequestFullscreen||pw.msRequestFullscreen;
-  if(req){
-    let p=null;
-    try{ p=req.call(pw); }catch(e){ p=null; }
-    if(p&&typeof p.catch==='function') p.catch(()=>{ if(!tryVideoFs()) toast('Fullscreen not supported here'); });
-    else if(!p) tryVideoFs();
-  }
-  else if(!tryVideoFs()){ toast('Fullscreen not supported on this browser'); }
-}
-document.getElementById('bFs').onclick = e=>{e.stopPropagation();toggleFs();};
-document.addEventListener('fullscreenchange',syncFsIcon);
-document.addEventListener('webkitfullscreenchange',syncFsIcon);
-vid.addEventListener('webkitbeginfullscreen',syncFsIcon);
-vid.addEventListener('webkitendfullscreen',syncFsIcon);
-/* picture-in-picture */
-const bPip=document.getElementById('bPip');
-async function togglePip(){
-  try{
-    if(document.pictureInPictureElement){ await document.exitPictureInPicture(); }
-    else if(document.pictureInPictureEnabled){ await vid.requestPictureInPicture(); }
-    else if(typeof vid.webkitSetPresentationMode==='function'){
-      vid.webkitSetPresentationMode(vid.webkitPresentationMode==='picture-in-picture'?'inline':'picture-in-picture');
-    }
-    else toast('Picture-in-Picture not supported');
-  }catch(err){ toast('Picture-in-Picture not available'); }
-}
-if(!(document.pictureInPictureEnabled||typeof vid.webkitSetPresentationMode==='function')){ bPip.style.display='none'; }
-bPip.onclick=e=>{e.stopPropagation();togglePip();};
-/* resume playback */
-let RKEY='thunder_resume_default';
-try{ RKEY='thunder_resume_'+btoa(unescape(encodeURIComponent(FILE_URL))).replace(/[^A-Za-z0-9]/g,'').slice(0,40); }catch(e){}
-function getSavedPos(){ try{ const v=parseFloat(localStorage.getItem(RKEY)); return isFinite(v)?v:0; }catch(e){ return 0; } }
-function savePos(){
-  try{
-    if(!isFinite(vid.duration)||vid.duration<=0) return;
-    const c=vid.currentTime;
-    if(c>10&&c<vid.duration-10) localStorage.setItem(RKEY,String(Math.floor(c)));
-    else localStorage.removeItem(RKEY);
-  }catch(e){}
-}
-vid.addEventListener('loadedmetadata', ()=>{
-  const s=getSavedPos();
-  if(s>10&&isFinite(vid.duration)&&s<vid.duration-10){
-    document.getElementById('resumeTxt').textContent='Resume from '+fmt(s)+'?';
-    document.getElementById('resumeChip').classList.add('show');
-  }
-});
-document.getElementById('resumeGo').onclick=e=>{e.stopPropagation();
-  const s=getSavedPos(); if(s>0) vid.currentTime=s;
-  document.getElementById('resumeChip').classList.remove('show');
-  vid.play().catch(()=>{});
-};
-document.getElementById('resumeNo').onclick=e=>{e.stopPropagation();
-  try{localStorage.removeItem(RKEY);}catch(err){}
-  document.getElementById('resumeChip').classList.remove('show');
-};
-let saveT=0;
-vid.addEventListener('timeupdate',()=>{ const n=Date.now(); if(n-saveT>5000){saveT=n;savePos();} });
-vid.addEventListener('pause',savePos);
-vid.addEventListener('ended',()=>{try{localStorage.removeItem(RKEY);}catch(e){}});
-window.addEventListener('pagehide',savePos);
-/* ambient glow */
-const ambC=document.createElement('canvas'); ambC.width=32; ambC.height=18;
-const ambX=ambC.getContext('2d');
-function updateAmbient(){
-  try{
-    if(vid.paused||vid.readyState<2||!vid.videoWidth) return;
-    ambX.drawImage(vid,0,0,32,18);
-    const d=ambX.getImageData(0,0,32,18).data;
-    let r=0,g=0,b=0,n=0;
-    for(let i=0;i<d.length;i+=16){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
-    r/=n; g/=n; b/=n;
-    const avg=(r+g+b)/3, boost=1.4;
-    r=Math.min(255,Math.round(avg+(r-avg)*boost));
-    g=Math.min(255,Math.round(avg+(g-avg)*boost));
-    b=Math.min(255,Math.round(avg+(b-avg)*boost));
-    pw.style.setProperty('--amb','rgba('+r+','+g+','+b+',.38)');
-  }catch(e){}
-}
-setInterval(updateAmbient,1000);
-/* settings */
-document.getElementById('bSet').onclick = e=>{e.stopPropagation();spPanel.classList.toggle('open');};
-spSpd.addEventListener('change', ()=>{vid.playbackRate=parseFloat(spSpd.value);});
-/* keyboard */
-document.addEventListener('keydown', e=>{
-  const t=(e.target.tagName||'').toUpperCase();
-  if(t==='SELECT'||t==='INPUT'||t==='TEXTAREA') return;
-  if(e.code==='Space'){e.preventDefault();togglePlay();}
-  else if(e.key==='ArrowRight'){skip(10);}
-  else if(e.key==='ArrowLeft'){skip(-10);}
-  else if(e.key==='ArrowUp'){e.preventDefault();vid.volume=Math.min(1,vid.volume+0.1);vs.value=vid.volume;syncVolIcon();}
-  else if(e.key==='ArrowDown'){e.preventDefault();vid.volume=Math.max(0,vid.volume-0.1);vs.value=vid.volume;syncVolIcon();}
-  else if(e.key==='m'||e.key==='M'){vid.muted=!vid.muted;syncVolIcon();}
-  else if(e.key==='f'||e.key==='F'){toggleFs();}
-});
-/* external player buttons */
-(function(){
-  const box=document.getElementById('ebs');
-  const ua=navigator.userAgent||'';
-  const isA=/android/i.test(ua), isI=/iphone|ipad|ipod/i.test(ua);
-  const encN=encodeURIComponent(FILE_NAME);
-  function mkBtn(icon,label,href,cls,dl){
-    const a=document.createElement('a');
-    a.className='eb'+(cls?' '+cls:'');
-    a.innerHTML='<i class="fa '+icon+'"></i> '+label;
-    a.href=href; a.rel='noopener';
-    if(dl){a.setAttribute('download',FILE_NAME);}
-    else if(href==='#'){a.href='javascript:void(0)';}
-    else{a.target='_blank';}
-    box.appendChild(a);
-    return a;
-  }
-  if(isA){
-    const pkgs=[
-      ['fa-circle-play','MX Player','com.mxtech.videoplayer.ad'],
-      ['fa-traffic-cone','VLC','org.videolan.vlc'],
-      ['fa-play','PLAYit','com.playit.videoplayer'],
-      ['fa-k','KM Player','com.kmplayer'],
-    ];
-    pkgs.forEach(([ic,lb,pk])=>{
-      mkBtn(ic,lb,'intent:'+FILE_URL+'#Intent;action=android.intent.action.VIEW;type=video/*;package='+pk+';S.title='+encN+';end');
-    });
-    mkBtn('fa-forward','nPlayer',FILE_URL.replace(/^https?/,'nplayer-https'));
-  }else if(isI){
-    mkBtn('fa-traffic-cone','VLC','vlc-x-callback://x-callback-url/stream?url='+encodeURIComponent(FILE_URL));
-    mkBtn('fa-forward','nPlayer',FILE_URL.replace(/^https?/,'nplayer-https'));
-  }else{
-    mkBtn('fa-traffic-cone','VLC','vlc://'+FILE_URL);
-    const cp=mkBtn('fa-copy','Copy URL','#');
-    cp.addEventListener('click',()=>{
-      (navigator.clipboard?navigator.clipboard.writeText(FILE_URL):Promise.reject())
-        .then(()=>toast('URL copied!')).catch(()=>toast('Copy failed'));
-    });
-  }
-  mkBtn('fa-download','Download',FILE_URL,'dl',true);
-})();
-
-/* twinkling starfield + shooting stars */
-(function(){
-  const cv=document.getElementById('stars'), cx=cv.getContext('2d');
-  let W,H,stars=[],meteors=[];
-  function resize(){
-    W=cv.width=window.innerWidth; H=cv.height=window.innerHeight;
-    const n=Math.min(220,Math.floor(W*H/9000));
-    stars=Array.from({length:n},()=>({x:Math.random()*W,y:Math.random()*H,
-      r:Math.random()*1.4+.3,p:Math.random()*Math.PI*2,s:.5+Math.random()*1.5}));
-  }
-  resize(); window.addEventListener('resize',resize);
-  function loop(t){
-    cx.clearRect(0,0,W,H);
-    for(const st of stars){
-      const tw=.35+.65*Math.abs(Math.sin(t/1000*st.s+st.p));
-      cx.globalAlpha=tw; cx.fillStyle='#dfe8ff';
-      cx.beginPath(); cx.arc(st.x,st.y,st.r,0,7); cx.fill();
-    }
-    if(!window._m0&&t>1200){window._m0=1;meteors.push({x:W*.55,y:H*.18,vx:8,vy:4,life:1});}
-    if(Math.random()<.02&&meteors.length<3)
-      meteors.push({x:Math.random()*W*.7,y:Math.random()*H*.3,vx:6+Math.random()*4,vy:3+Math.random()*2,life:1});
-    cx.globalAlpha=1;
-    meteors=meteors.filter(m=>m.life>0);
-    for(const m of meteors){
-      m.x+=m.vx; m.y+=m.vy; m.life-=.02;
-      const g=cx.createLinearGradient(m.x,m.y,m.x-m.vx*16,m.y-m.vy*16);
-      g.addColorStop(0,'rgba(255,255,255,'+(m.life*.95)+')');
-      g.addColorStop(1,'rgba(255,255,255,0)');
-      cx.strokeStyle=g; cx.lineWidth=2.5;
-      cx.beginPath(); cx.moveTo(m.x,m.y); cx.lineTo(m.x-m.vx*16,m.y-m.vy*16); cx.stroke();
-    }
-    requestAnimationFrame(loop);
-  }
-  requestAnimationFrame(loop);
-})();
-/* external players modal */
-const extModal=document.getElementById('extModal');
-document.getElementById('extBtn').onclick=()=>{extModal.classList.add('open');extModal.setAttribute('aria-hidden','false');};
-function closeExt(){extModal.classList.remove('open');extModal.setAttribute('aria-hidden','true');}
-document.getElementById('extClose').onclick=closeExt;
-extModal.addEventListener('click',e=>{if(e.target===extModal)closeExt();});
-/* theme switch: moonlight <-> sunshine */
-const themeToggle=document.getElementById('themeToggle'),
-      themeIcon=document.getElementById('themeIcon'),
-      orb=document.getElementById('orb'),
-      brandIco=document.getElementById('brandIco'),
-      brandSub=document.getElementById('brandSub'),
-      footIcon=document.getElementById('footIcon'),
-      footText=document.getElementById('footText');
-function applyTheme(mode){
-  const light=mode==='light';
-  document.body.dataset.wt=mode;
-  themeIcon.className=light?'fa fa-sun':'fa fa-moon';
-  brandIco.className=light?'fa fa-sun':'fa fa-moon';
-  orb.classList.toggle('sun',light);
-  orb.classList.toggle('moon',!light);
-  brandSub.textContent=light?'sunshine streaming':'moonlight streaming';
-  footIcon.className=light?'fa fa-sun':'fa fa-moon';
-  footText.textContent=light?'Stream under the sunshine':'Stream under the moonlight';
-  try{localStorage.setItem('wolf_theme',mode);}catch(e){}
-}
-let savedTheme='dark';
-try{savedTheme=localStorage.getItem('wolf_theme')||'dark';}catch(e){}
-applyTheme(savedTheme==='light'?'light':'dark');
-themeToggle.onclick=()=>{applyTheme(document.body.dataset.wt==='light'?'dark':'light');};
-/* HEVC / Dolby warning: auto-show from filename */
-try{
-  if(/x265|hevc|h\.?265|10bit|dolby|dts|truehd|eac3|atmos/i.test(FILE_NAME||'')){
-    document.getElementById('hevcWarn').hidden=false;
-  }
-}catch(e){}
-</script>
+    <script>
+        window.__CINEMA_CONFIG__ = {
+            "src": {{ stream_url | tojson }},
+            "mimeType": {{ mime_type | tojson }},
+            "fileName": {{ file_name | tojson }},
+            "isVideo": {{ is_video | tojson }},
+            "isAudio": {{ is_audio | tojson }}
+        };
+    </script>
+    <script src="/assets/player.js?v={{ asset_version }}" defer></script>
 </body>
+
 </html>
