@@ -392,6 +392,57 @@
     }, 1500);
   });
 
+  // ── ±5s skip ───────────────────────────────────────────────────────────
+  // movi-player ships no skip buttons, no double-tap and no keyboard seek,
+  // so these overlay buttons (plus Left/Right arrows on desktop) are the
+  // only ±5s path. Seek through the element itself when it proxies
+  // currentTime, else through the native <video> inside it.
+  const SKIP_SECONDS = 5;
+  const skipBackBtn = document.getElementById("skipBackBtn");
+  const skipFwdBtn = document.getElementById("skipFwdBtn");
+
+  const getSeekTarget = () => {
+    const inner = player?.querySelector("video") || null;
+    if (player && typeof player.currentTime === "number" && isFinite(player.currentTime)) {
+      const duration = isFinite(player.duration)
+        ? player.duration
+        : (inner && isFinite(inner.duration) ? inner.duration : NaN);
+      return { el: player, duration };
+    }
+    if (inner && typeof inner.currentTime === "number" && isFinite(inner.duration)) {
+      return { el: inner, duration: inner.duration };
+    }
+    return null;
+  };
+
+  const seekBy = (seconds) => {
+    const target = getSeekTarget();
+    if (!target || !isFinite(target.duration) || target.duration <= 0) {
+      showToast("Seek available nahi hai");
+      return;
+    }
+    target.el.currentTime = Math.min(
+      Math.max(0, target.el.currentTime + seconds),
+      target.duration
+    );
+    showToast(seconds < 0 ? "5 second peeche" : "5 second aage");
+  };
+
+  skipBackBtn?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    seekBy(-SKIP_SECONDS);
+  });
+  skipFwdBtn?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    seekBy(SKIP_SECONDS);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    if (event.target && /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) return;
+    seekBy(event.key === "ArrowLeft" ? -SKIP_SECONDS : SKIP_SECONDS);
+  });
+
   // ── Footer year ──────────────────────────────────────────────────────────
   const setCopyrightYear = () => {
     const slot = document.getElementById("copyrightYear");

@@ -73,8 +73,10 @@
             <div class="screen">
                 {% if is_video or is_audio %}
                 <movi-player id="player" src="{{ stream_url }}" title="{{ file_name }}"
-                             controls resume playsinline fallback="native"
+                             controls playsinline fallback="native"
                              theme="dark" themecolor="#5b7fd6"></movi-player>
+                <button type="button" class="skip-btn skip-back" id="skipBackBtn" aria-label="5 seconds back">−5s</button>
+                <button type="button" class="skip-btn skip-fwd" id="skipFwdBtn" aria-label="5 seconds forward">+5s</button>
                 {% elif is_image %}
                 <div class="image-viewer">
                     <img src="{{ stream_url }}" alt="Preview of {{ file_name }}" loading="lazy">
