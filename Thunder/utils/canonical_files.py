@@ -513,7 +513,14 @@ async def get_or_create_canonical_file(
                             await stored_message.delete()
                         except Exception as e:
                             logger.warning(f"Failed to delete stored message {stored_message.id} in BIN_CHANNEL: {e}", exc_info=True)
-                    raise
+                    # Another record already owns this BIN message id
+                    # (e.g. two bots sharing one DB with separate BIN
+                    # channels). Retry with a fresh BIN copy instead of
+                    # surfacing a raw E11000 to the user.
+                    logger.warning(
+                        f"Duplicate canonical message id for {file_unique_id}; retrying ingest"
+                    )
+                    continue
                 except FloodWait:
                     raise
                 except Exception as e:
