@@ -398,8 +398,11 @@
   // only ±5s path. Seek through the element itself when it proxies
   // currentTime, else through the native <video> inside it.
   const SKIP_SECONDS = 5;
+  const SKIP_HIDE_DELAY = 3000;
   const skipBackBtn = document.getElementById("skipBackBtn");
   const skipFwdBtn = document.getElementById("skipFwdBtn");
+  const screenEl = document.querySelector(".screen");
+  const skipButtons = [skipBackBtn, skipFwdBtn].filter(Boolean);
 
   const getSeekTarget = () => {
     const inner = player?.querySelector("video") || null;
@@ -415,26 +418,104 @@
     return null;
   };
 
+  // Paused state: prefer the real <video> inside the player, then the
+  // player's own flag, then the play/pause events we saw. Unknown = paused
+  // (buttons stay visible — the safe side).
+  let mediaPlaying = false;
+  const isPaused = () => {
+    const inner = player?.querySelector("video");
+    if (inner && typeof inner.paused === "boolean") return inner.paused;
+    if (player && typeof player.paused === "boolean") return player.paused;
+    return !mediaPlaying;
+  };
+
   const seekBy = (seconds) => {
     const target = getSeekTarget();
-    if (!target || !isFinite(target.duration) || target.duration <= 0) {
-      showToast("Seek available nahi hai");
-      return;
-    }
+    if (!target || !isFinite(target.duration) || target.duration <= 0) return;
     target.el.currentTime = Math.min(
       Math.max(0, target.el.currentTime + seconds),
       target.duration
     );
-    showToast(seconds < 0 ? "5 second peeche" : "5 second aage");
   };
+
+  // ── Skip buttons: placement, auto-hide, fullscreen ─────────────────────
+  // Buttons live INSIDE <movi-player> so they ride along when it goes
+  // fullscreen (its fullscreen layer is the player element itself). If the
+  // player ever drops them during a re-render, put them back.
+  let skipHideTimer = null;
+  let lastSkipRestore = 0;
+
+  const placeSkipButtons = () => {
+    if (!player) return;
+    skipButtons.forEach((btn) => {
+      if (!player.contains(btn)) player.appendChild(btn);
+    });
+  };
+
+  const setSkipHidden = (hidden) => {
+    skipButtons.forEach((btn) => btn.classList.toggle("is-hidden", hidden));
+  };
+
+  const showSkipButtons = () => {
+    clearTimeout(skipHideTimer);
+    setSkipHidden(false);
+    skipHideTimer = setTimeout(() => {
+      if (!isPaused()) setSkipHidden(true);
+    }, SKIP_HIDE_DELAY);
+  };
+
+  if (player && skipButtons.length > 0) {
+    placeSkipButtons();
+
+    const skipObserver = new MutationObserver(() => {
+      const now = Date.now();
+      if (now - lastSkipRestore < 300) return;
+      if (skipButtons.some((btn) => !player.contains(btn))) {
+        lastSkipRestore = now;
+        placeSkipButtons();
+      }
+    });
+    skipObserver.observe(player, { childList: true });
+
+    // Native fullscreen on a container element: move the buttons into it
+    // while fullscreen lasts; on exit, move them back into the player.
+    // (VIDEO/CANVAS can't render children, so those are left alone.)
+    document.addEventListener("fullscreenchange", () => {
+      const fs = document.fullscreenElement;
+      if (fs && fs !== player && !/^(VIDEO|CANVAS)$/.test(fs.tagName)) {
+        skipButtons.forEach((btn) => {
+          if (!fs.contains(btn)) fs.appendChild(btn);
+        });
+        setSkipHidden(false);
+      } else if (!fs) {
+        placeSkipButtons();
+      }
+    });
+
+    // Show on any tap / mouse move over the video; fade 3s after the last
+    // interaction while playing. Paused = stay visible.
+    screenEl?.addEventListener("pointerdown", showSkipButtons);
+    screenEl?.addEventListener("pointermove", showSkipButtons);
+    player.addEventListener("play", () => {
+      mediaPlaying = true;
+      showSkipButtons();
+    });
+    player.addEventListener("pause", () => {
+      mediaPlaying = false;
+      clearTimeout(skipHideTimer);
+      setSkipHidden(false);
+    });
+  }
 
   skipBackBtn?.addEventListener("click", (event) => {
     event.stopPropagation();
     seekBy(-SKIP_SECONDS);
+    showSkipButtons();
   });
   skipFwdBtn?.addEventListener("click", (event) => {
     event.stopPropagation();
     seekBy(SKIP_SECONDS);
+    showSkipButtons();
   });
 
   document.addEventListener("keydown", (event) => {
