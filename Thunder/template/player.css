@@ -594,6 +594,15 @@ media-airplay-button {
   background-image: linear-gradient(var(--obsidian), var(--obsidian)),
     var(--screen-border-gradient);
 }
+/* Fullscreen is requested on .screen (not the player) so the skip buttons
+   stay visible: square the corners off and kill the glow so it fills the
+   viewport edge to edge. */
+.screen:fullscreen {
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
+  animation: none;
+}
 @keyframes ambientBreathe {
   0%,
   to {

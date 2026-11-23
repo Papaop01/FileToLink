@@ -405,7 +405,10 @@
   const skipButtons = [skipBackBtn, skipFwdBtn].filter(Boolean);
 
   const getSeekTarget = () => {
-    const inner = player?.querySelector("video") || null;
+    // querySelector on the player does NOT pierce its shadow DOM, so the
+    // native <video> is reached through the (open) shadow root instead.
+    const shadowVideo = player?.shadowRoot?.querySelector("video") || null;
+    const inner = shadowVideo || player?.querySelector("video") || null;
     if (player && typeof player.currentTime === "number" && isFinite(player.currentTime)) {
       const duration = isFinite(player.duration)
         ? player.duration
@@ -423,7 +426,7 @@
   // (buttons stay visible — the safe side).
   let mediaPlaying = false;
   const isPaused = () => {
-    const inner = player?.querySelector("video");
+    const inner = player?.shadowRoot?.querySelector("video") || player?.querySelector("video");
     if (inner && typeof inner.paused === "boolean") return inner.paused;
     if (player && typeof player.paused === "boolean") return player.paused;
     return !mediaPlaying;
@@ -439,16 +442,21 @@
   };
 
   // ── Skip buttons: placement, auto-hide, fullscreen ─────────────────────
-  // Buttons live INSIDE <movi-player> so they ride along when it goes
-  // fullscreen (its fullscreen layer is the player element itself). If the
-  // player ever drops them during a re-render, put them back.
+  // v2 moved the buttons INSIDE <movi-player> and they vanished completely:
+  // the player paints its shadow DOM over light-DOM children (verified: a
+  // probe child of the player measures 0x0 — there is no default <slot>).
+  // v3 moved them into the fullscreen element instead, which hid them the
+  // same way while fullscreen lasted, and the contains() check then stranded
+  // them there after exit. So the buttons NEVER leave .screen now.
   let skipHideTimer = null;
-  let lastSkipRestore = 0;
 
-  const placeSkipButtons = () => {
-    if (!player) return;
+  const placeSkipButtonsInScreen = () => {
+    if (!screenEl) return;
     skipButtons.forEach((btn) => {
-      if (!player.contains(btn)) player.appendChild(btn);
+      // contains() is wrong here: the player is a descendant of .screen,
+      // so a button nested inside the player would pass the check and
+      // never come back. Compare the parent directly.
+      if (btn.parentElement !== screenEl) screenEl.appendChild(btn);
     });
   };
 
@@ -464,43 +472,72 @@
     }, SKIP_HIDE_DELAY);
   };
 
-  if (player && skipButtons.length > 0) {
-    placeSkipButtons();
+  // ── Fullscreen: keep the buttons visible ───────────────────────────────
+  // Native fullscreen shows only the fullscreen element's own subtree.
+  // movi-player fullscreens ITSELF, and its shadow DOM has no slot for
+  // light-DOM children — so buttons sitting in .screen vanish in fullscreen
+  // and buttons moved into the player render 0x0. The fix is to put .screen
+  // (player + buttons) into fullscreen instead. That is done by intercepting
+  // the player's own fullscreen button in the CAPTURE phase on the player
+  // element: capture on the host runs before the button's own listener, so
+  // stopPropagation keeps movi's handler from ever firing and there is a
+  // single fullscreen request (no double-toggle flicker). The button is
+  // looked up fresh on every click, so no re-attachment is needed when
+  // movi rebuilds its chrome. If anything here fails, the worst case is
+  // the player's own fullscreen (buttons hidden there) — fullscreen itself
+  // is never broken by this code.
+  const findFullscreenButton = () => {
+    const root = player?.shadowRoot;
+    if (!root) return null;
+    return root.querySelector(
+      'button[aria-label="Fullscreen"], button[title*="ullscreen" i], button[class*="fullscreen" i]',
+    );
+  };
 
-    const skipObserver = new MutationObserver(() => {
-      const now = Date.now();
-      if (now - lastSkipRestore < 300) return;
-      if (skipButtons.some((btn) => !player.contains(btn))) {
-        lastSkipRestore = now;
-        placeSkipButtons();
+  const redirectFullscreen = (event) => {
+    if (!player || !screenEl || !document.fullscreenEnabled) return;
+    const fsBtn = findFullscreenButton();
+    // composedPath is needed: from the host, event.target is retargeted
+    // to the player, but the path still contains the real shadow target.
+    if (!fsBtn || !event.composedPath().includes(fsBtn)) return;
+    event.stopPropagation();
+    event.preventDefault();
+    try {
+      if (document.fullscreenElement === screenEl) {
+        const p = document.exitFullscreen();
+        if (p && typeof p.catch === "function") p.catch(() => {});
+      } else {
+        const p = screenEl.requestFullscreen();
+        if (p && typeof p.catch === "function") p.catch(() => {});
       }
-    });
-    skipObserver.observe(player, { childList: true });
+    } catch {
+      /* player's own fullscreen stays as it was */
+    }
+  };
 
-    // Native fullscreen on a container element: move the buttons into it
-    // while fullscreen lasts; on exit, move them back into the player.
-    // (VIDEO/CANVAS can't render children, so those are left alone.)
-    document.addEventListener("fullscreenchange", () => {
-      const fs = document.fullscreenElement;
-      if (fs && fs !== player && !/^(VIDEO|CANVAS)$/.test(fs.tagName)) {
-        skipButtons.forEach((btn) => {
-          if (!fs.contains(btn)) fs.appendChild(btn);
-        });
-        setSkipHidden(false);
-      } else if (!fs) {
-        placeSkipButtons();
-      }
-    });
+  const initFullscreenRedirect = () => {
+    if (!player || !screenEl) return;
+    player.addEventListener("click", redirectFullscreen, true);
+  };
+
+  if (skipButtons.length > 0) {
+    placeSkipButtonsInScreen();
+    setSkipHidden(false);
+    initFullscreenRedirect();
 
     // Show on any tap / mouse move over the video; fade 3s after the last
-    // interaction while playing. Paused = stay visible.
+    // interaction while playing. Paused = stay visible. Listeners sit on
+    // both the player and .screen so a tap the player swallows still
+    // reveals the buttons.
     screenEl?.addEventListener("pointerdown", showSkipButtons);
     screenEl?.addEventListener("pointermove", showSkipButtons);
-    player.addEventListener("play", () => {
+    player?.addEventListener("pointerdown", showSkipButtons);
+    player?.addEventListener("pointermove", showSkipButtons);
+    player?.addEventListener("play", () => {
       mediaPlaying = true;
       showSkipButtons();
     });
-    player.addEventListener("pause", () => {
+    player?.addEventListener("pause", () => {
       mediaPlaying = false;
       clearTimeout(skipHideTimer);
       setSkipHidden(false);
